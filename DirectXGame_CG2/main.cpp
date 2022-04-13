@@ -9,6 +9,12 @@ using namespace DirectX;
 #include <d3dcompiler.h>
 #pragma comment(lib, "d3dcompiler.lib")
 
+#define DIRECTINPUT_VERSION		0x0800	//DirectInputのバージョン指定
+#include <dinput.h>
+
+#pragma comment(lib, "dinput8.lib")
+#pragma comment(lib,"dxguid.lib")
+
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
 
@@ -29,10 +35,10 @@ LRESULT WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 //Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
+#pragma region WindowsAPI初期化処理
 		//-+-+-+-+-+-+-+-+-+-+-+-+-//
 		//WindowsAPI初期化処理 ここから//
 		//-+-+-+-+-+-+-+-+-+-+-+-+-//
-#pragma region
 	const int window_width = 1280;	//横幅
 	const int window_height = 720;	//縦幅
 
@@ -68,15 +74,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		ShowWindow(hwnd, SW_SHOW);
 
 		MSG msg{};		//メッセージ
-#pragma endregion
 		//-+-+-+-+-+-+-+-+-+-+-+-+-//
 		//WindowsAPI初期化処理 ここまで//
 		//-+-+-+-+-+-+-+-+-+-+-+-+-//
+#pragma endregion
 
+#pragma region DirectX初期化処理
 		//-+-+-+-+-+-+-+-+-+-+-+-//
 		//DirectX初期化処理　ここから//
 		//-+-+-+-+-+-+-+-+-+-+-+-//
-#pragma region
 
 #ifdef _DEBUG
 //デバッグレイヤーをオンに
@@ -211,15 +217,40 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		ID3D12Fence* fence = nullptr;
 		UINT64 fenceVal = 0;
 		result = device->CreateFence(fenceVal, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
-#pragma endregion
+
+		//DirectInputの初期化
+		IDirectInput8* directInput = nullptr;
+		result = DirectInput8Create(
+			w.hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8,
+			(void**)&directInput, nullptr);
+		assert(SUCCEEDED(result));
+
+		//キーボードデバイスの生成
+		IDirectInputDevice8* keyboard = nullptr;
+		result = directInput->CreateDevice(GUID_SysKeyboard, &keyboard,NULL);
+		assert(SUCCEEDED(result));
+
+		//入力データ形式のセット
+		result = keyboard->SetDataFormat(&c_dfDIKeyboard);	//標準形式
+		assert(SUCCEEDED(result));
+
+		//排他制御レベルのセット
+		result = keyboard->SetCooperativeLevel(
+			hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);		//使っているフラグについて
+		assert(SUCCEEDED(result));												//DISCL_FOREGROUND		画面が手前にある場合のみ入力を受け付ける
+																				//DISCL_NONEXCLUSIVE	デバイスをこのアプリだけで占有しない
+																				//DISCL_NOWINKEY		Windowsキーを無効化する 
+											
+
 		//-+-+-+-+-+-+-+-+-+-+-+-//
 		//DirectX初期化処理　ここまで//
 		//-+-+-+-+-+-+-+-+-+-+-+-//
+#pragma endregion
 
+#pragma region 描画初期化処理
 		///////////////////////
 		//描画初期化処理　ここから//
 		///////////////////////
-#pragma region
 		// 頂点データ
 		XMFLOAT3 vertices[] = {
 		{ -0.5f, -0.5f, 0.0f }, // 左下
@@ -392,17 +423,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		ID3D12PipelineState* pipelineState = nullptr;
 		result = device->CreateGraphicsPipelineState(&pipelineDesc, IID_PPV_ARGS(&pipelineState));
 		assert(SUCCEEDED(result));
-#pragma endregion
 		///////////////////////
 		//描画初期化処理　ここまで//
 		///////////////////////
+#pragma endregion
 
 		//ゲームループ
 		while (true) {
+#pragma region ウィンドウメッセージ処理
 			///////////////////////
 			//ウィンドウメッセージ処理//
 			///////////////////////
-#pragma region
 			// メッセージがある？
 			if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
 				TranslateMessage(&msg); // キー入力メッセージの処理
@@ -414,10 +445,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			}
 #pragma endregion
 
+#pragma region DirectX毎フレーム処理ここから
 			//-+-+-+-+-+-+-+-+-+-+-+-+-+-//
 			// DirectX毎フレーム処理 ここから//
 			//-+-+-+-+-+-+-+-+-+-+-+-+-+-//
-#pragma region
+			//キーボード情報の取得開始
+			keyboard->Acquire();
+			//全キーの入力状態を取得する
+			BYTE key[256] = {};
+			keyboard->GetDeviceState(sizeof(key), key);
+
 			// バックバッファの番号を取得(2つなので0番か1番)
 			UINT bbIndex = swapChain->GetCurrentBackBufferIndex();
 			// 1.リソースバリアで書き込み可能に変更
@@ -435,12 +472,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 			// 3.画面クリア R G B A
 			FLOAT clearColor[] = { 0.1f,0.25f, 0.5f,0.0f }; // 青っぽい色
+
+			////数字の0キーが押されていたら
+			//if (key[DIK_0]) {
+			//	clearColor[0] = 0.5f;
+			//}
+
 			commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+
 #pragma endregion
+
+#pragma region 描画コマンド
 			///////////////////////
 			// 4.描画コマンドここから//
 			///////////////////////
-#pragma region
 			// ビューポート設定コマンド
 			D3D12_VIEWPORT viewport{};
 			viewport.Width = window_width;
@@ -473,11 +518,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 			// 描画コマンド
 			commandList->DrawInstanced(_countof(vertices), 1, 0, 0); // 全ての頂点を使って描画
-#pragma endregion
 			///////////////////////
 			// 4.描画コマンドここまで//
 			///////////////////////
-#pragma region
+#pragma endregion
+
+#pragma region DirectX毎フレーム処理ここまで
 			// 5.リソースバリアを戻す
 			barrierDesc.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET; // 描画状態から
 			barrierDesc.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT; // 表示状態へ
@@ -507,10 +553,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			// 再びコマンドリストを貯める準備
 			result = commandList->Reset(commandAllocator, nullptr);
 			assert(SUCCEEDED(result));
-#pragma endregion
 			//-+-+-+-+-+-+-+-+-+-+-+-+-+-//
 			// DirectX毎フレーム処理 ここまで//
 			//-+-+-+-+-+-+-+-+-+-+-+-+-+-//
+#pragma endregion
 		}
 
 	//コンソールへの文字出力
