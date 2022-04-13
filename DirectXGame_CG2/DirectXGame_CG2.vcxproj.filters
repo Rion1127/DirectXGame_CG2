@@ -19,4 +19,8 @@
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="BasicVs.hlsl" />
+    <FxCompile Include="BasicPS.hlsl" />
+  </ItemGroup>
 </Project>
