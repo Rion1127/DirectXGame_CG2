@@ -446,6 +446,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			// 3.画面クリア R G B A
 			FLOAT clearColor[] = { 0.1f,0.25f, 0.5f,0.0f }; // 青っぽい色
 
+			//ーーーーーここからプログラム記述ーーーーーーーー//
 			////数字の0キーが押されていたら
 			if (DirectXInput::GetKeyReleased(DIK_0)) {
 				clearColor[0] = 0.5f;
