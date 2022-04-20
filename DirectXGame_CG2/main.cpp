@@ -5,15 +5,12 @@
 #include <vector>
 #include <string>
 #include <DirectXMath.h>
+#include "DirectXInput.h"
 using namespace DirectX;
 #include <d3dcompiler.h>
 #pragma comment(lib, "d3dcompiler.lib")
 
-#define DIRECTINPUT_VERSION		0x0800	//DirectInputのバージョン指定
-#include <dinput.h>
 
-#pragma comment(lib, "dinput8.lib")
-#pragma comment(lib,"dxguid.lib")
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -218,29 +215,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		UINT64 fenceVal = 0;
 		result = device->CreateFence(fenceVal, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
 
-		//DirectInputの初期化
-		IDirectInput8* directInput = nullptr;
-		result = DirectInput8Create(
-			w.hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8,
-			(void**)&directInput, nullptr);
-		assert(SUCCEEDED(result));
-
-		//キーボードデバイスの生成
-		IDirectInputDevice8* keyboard = nullptr;
-		result = directInput->CreateDevice(GUID_SysKeyboard, &keyboard,NULL);
-		assert(SUCCEEDED(result));
-
-		//入力データ形式のセット
-		result = keyboard->SetDataFormat(&c_dfDIKeyboard);	//標準形式
-		assert(SUCCEEDED(result));
-
-		//排他制御レベルのセット
-		result = keyboard->SetCooperativeLevel(
-			hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);		//使っているフラグについて
-		assert(SUCCEEDED(result));												//DISCL_FOREGROUND		画面が手前にある場合のみ入力を受け付ける
-																				//DISCL_NONEXCLUSIVE	デバイスをこのアプリだけで占有しない
-																				//DISCL_NOWINKEY		Windowsキーを無効化する 
-											
+		//キーボードインプット初期化
+		DirectXInput::InputIni(result, w, hwnd);
 
 		//-+-+-+-+-+-+-+-+-+-+-+-//
 		//DirectX初期化処理　ここまで//
@@ -449,11 +425,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			//-+-+-+-+-+-+-+-+-+-+-+-+-+-//
 			// DirectX毎フレーム処理 ここから//
 			//-+-+-+-+-+-+-+-+-+-+-+-+-+-//
-			//キーボード情報の取得開始
-			keyboard->Acquire();
-			//全キーの入力状態を取得する
-			BYTE key[256] = {};
-			keyboard->GetDeviceState(sizeof(key), key);
+			//キーボード情報の取得開始 //全キーの入力状態を取得する
+			DirectXInput::InputUpdata();
 
 			// バックバッファの番号を取得(2つなので0番か1番)
 			UINT bbIndex = swapChain->GetCurrentBackBufferIndex();
@@ -474,9 +447,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			FLOAT clearColor[] = { 0.1f,0.25f, 0.5f,0.0f }; // 青っぽい色
 
 			////数字の0キーが押されていたら
-			//if (key[DIK_0]) {
-			//	clearColor[0] = 0.5f;
-			//}
+			if (DirectXInput::GetKeyReleased(DIK_0)) {
+				clearColor[0] = 0.5f;
+			}
 
 			commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 
