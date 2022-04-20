@@ -10,8 +10,6 @@ using namespace DirectX;
 #include <d3dcompiler.h>
 #pragma comment(lib, "d3dcompiler.lib")
 
-
-
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
 
@@ -359,7 +357,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 		// ラスタライザの設定
 		pipelineDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE; // カリングしない
-		pipelineDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID; // ポリゴン内塗りつぶし
+		pipelineDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID; // ポリゴン内塗りつぶし	SOLID = 塗りつぶし  WIREFRAME = ワイヤーフレーム
 		pipelineDesc.RasterizerState.DepthClipEnable = true; // 深度クリッピングを有効に
 
 		// ブレンドステート
@@ -464,7 +462,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			D3D12_VIEWPORT viewport{};
 			viewport.Width = window_width;
 			viewport.Height = window_height;
-			viewport.TopLeftX = 0;
+			viewport.TopLeftX = 0;				//画面のどの座標から座標(0,0)にするかを決める
 			viewport.TopLeftY = 0;
 			viewport.MinDepth = 0.0f;
 			viewport.MaxDepth = 1.0f;
@@ -473,6 +471,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 			// シザー矩形
 			D3D12_RECT scissorRect{};
+			//指定座標の中のみ描画するための処理
 			scissorRect.left = 0; // 切り抜き座標左
 			scissorRect.right = scissorRect.left + window_width; // 切り抜き座標右
 			scissorRect.top = 0; // 切り抜き座標上
