@@ -45,7 +45,6 @@ void DirectXInput::InputIni(HRESULT result, WNDCLASSEX w, HWND hwnd)	//初期化
 
 void DirectXInput::InputUpdata()	//アップデート
 {
-	keyboard->GetDeviceState(sizeof(oldkeys), oldkeys);
 	for (int i = 0; i < 256; ++i)
 	{
 		oldkeys[i] = keys[i];
