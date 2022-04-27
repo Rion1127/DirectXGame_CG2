@@ -332,82 +332,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 	Viewport::ViewPortIni(vsBlob, psBlob, errorBlob, &result, device);
 
-#pragma region
-
-	//// 頂点レイアウト
-	//D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
-	//{
-	//"POSITION",									//セマンティック名
-	//0,											//同じセマンティック名が複数あるときに使うインデックス(０でよい)
-	//DXGI_FORMAT_R32G32B32_FLOAT,				//要素数とビット数を現す(XYZの３つでfloat型なのでR32G32B32_FLOAT)
-	//0,											//入力スロットインデックス(0でよい)
-	//D3D12_APPEND_ALIGNED_ELEMENT,				//データのオフセット値(D3D12_APPEND_ALIGNED_ELEMENTだと自動設定)
-	//D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,	//入力データ種別(標準はD3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA)
-	//0											//一度に描画するインスタンス数(0でよい)
-	//}, // (1行で書いたほうが見やすい)
-	////座標以外に　色、テクスチャUV等を渡す場合はさらに続ける
-	//};
-
-	//// グラフィックスパイプライン設定
-	//D3D12_GRAPHICS_PIPELINE_STATE_DESC pipelineDesc{};
-
-	//// シェーダーの設定
-	//pipelineDesc.VS.pShaderBytecode = vsBlob->GetBufferPointer();
-	//pipelineDesc.VS.BytecodeLength = vsBlob->GetBufferSize();
-	//pipelineDesc.PS.pShaderBytecode = psBlob->GetBufferPointer();
-	//pipelineDesc.PS.BytecodeLength = psBlob->GetBufferSize();
-
-	//// サンプルマスクの設定
-	//pipelineDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK; // 標準設定
-
-	//// ラスタライザの設定
-	//pipelineDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE; // カリングしない
-	//pipelineDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID; // ポリゴン内塗りつぶし	SOLID = 塗りつぶし  WIREFRAME = ワイヤーフレーム
-	//pipelineDesc.RasterizerState.DepthClipEnable = true; // 深度クリッピングを有効に
-
-	//// ブレンドステート
-	//pipelineDesc.BlendState.RenderTarget[0].RenderTargetWriteMask
-	//	= D3D12_COLOR_WRITE_ENABLE_ALL; // RBGA全てのチャンネルを描画
-
-	//// 頂点レイアウトの設定
-	//pipelineDesc.InputLayout.pInputElementDescs = inputLayout;
-	//pipelineDesc.InputLayout.NumElements = _countof(inputLayout);
-
-	//// 図形の形状設定
-	//pipelineDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-
-	//// その他の設定
-	//pipelineDesc.NumRenderTargets = 1; // 描画対象は1つ
-	//pipelineDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB; // 0~255指定のRGBA
-	//pipelineDesc.SampleDesc.Count = 1; // 1ピクセルにつき1回サンプリング
-
-	//// ルートシグネチャ
-	//ID3D12RootSignature* rootSignature;
-	//// ルートシグネチャの設定
-	//D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc{};
-	//rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-	//// ルートシグネチャのシリアライズ
-	//ID3DBlob* rootSigBlob = nullptr;
-	//result = D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1_0,
-	//	&rootSigBlob, &errorBlob);
-	//assert(SUCCEEDED(result));
-	//result = device->CreateRootSignature(0, rootSigBlob->GetBufferPointer(), rootSigBlob->GetBufferSize(),
-	//	IID_PPV_ARGS(&rootSignature));
-	//assert(SUCCEEDED(result));
-	//rootSigBlob->Release();
-	//// パイプラインにルートシグネチャをセット
-	//pipelineDesc.pRootSignature = rootSignature;
-
-	//// パイプランステートの生成
-	//ID3D12PipelineState* pipelineState = nullptr;
-	//result = device->CreateGraphicsPipelineState(&pipelineDesc, IID_PPV_ARGS(&pipelineState));
-	//assert(SUCCEEDED(result));
-	///////////////////////
-	//描画初期化処理　ここまで//
-	///////////////////////
-#pragma endregion
-
-
 		//ゲームループ
 	while (true) {
 #pragma region ウィンドウメッセージ処理
@@ -448,7 +372,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		commandList->OMSetRenderTargets(1, &rtvHandle, false, nullptr);
 
 		// 3.画面クリア R G B A
-		FLOAT clearColor[] = { 0.0f,0.1f, 0.8f,0.0f }; // 青っぽい色
+		FLOAT clearColor[] = { 0.1f,0.25f, 0.5f,0.0f }; // 青っぽい色
 
 		//ーーーーーここからプログラム記述ーーーーーーーー//
 		////数字の0キーが押されていたら
@@ -486,10 +410,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		scissorRect.bottom = scissorRect.top + window_height; // 切り抜き座標下
 		// シザー矩形設定コマンドを、コマンドリストに積む
 		commandList->RSSetScissorRects(1, &scissorRect);
-
 		//-------------------------左上
 		// ビューポート設定コマンド
-		Viewport::SetViewport((float)window_width / 2, (float)window_height / 2, 0, 0);
+		Viewport::SetViewport((float)window_width, (float)window_height, 0, 0, 0, 1.0f);
 		// パイプラインステートとルートシグネチャの設定コマンド
 		Viewport::SetPipeline(commandList);
 		// プリミティブ形状の設定コマンド
@@ -498,33 +421,33 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		commandList->IASetVertexBuffers(0, 1, &vbView);
 		// 描画コマンド
 		commandList->DrawInstanced(_countof(vertices), 1, 0, 0); // 全ての頂点を使って描画
-		//-------------------------右上
-		// ビューポート設定コマンド
-		Viewport::SetViewport((float)window_width / 2, (float)window_height / 2, (float)window_width / 2, (float)0);
-		// パイプラインステートとルートシグネチャの設定コマンド
-		Viewport::SetPipeline(commandList);
-		// 頂点バッファビューの設定コマンド
-		commandList->IASetVertexBuffers(0, 1, &vbView);
-		// 描画コマンド
-		commandList->DrawInstanced(_countof(vertices), 1, 0, 0); // 全ての頂点を使って描画
-		//-------------------------左下
-		// ビューポート設定コマンド
-		Viewport::SetViewport((float)300, (float)window_height / 2, (float)0, (float)window_height / 2);
-		// パイプラインステートとルートシグネチャの設定コマンド
-		Viewport::SetPipeline(commandList);
-		// 頂点バッファビューの設定コマンド
-		commandList->IASetVertexBuffers(0, 1, &vbView);
-		// 描画コマンド
-		commandList->DrawInstanced(_countof(vertices), 1, 0, 0); // 全ての頂点を使って描画
-		//-----------------------右下
-		// ビューポート設定コマンド
-		Viewport::SetViewport((float)300, (float)200, (float)window_width / 2, (float)window_height / 2);
-		// パイプラインステートとルートシグネチャの設定コマンド
-		Viewport::SetPipeline(commandList);
-		// 頂点バッファビューの設定コマンド
-		commandList->IASetVertexBuffers(0, 1, &vbView);
-		// 描画コマンド
-		commandList->DrawInstanced(_countof(vertices), 1, 0, 0); // 全ての頂点を使って描画
+		////-------------------------右上
+		//// ビューポート設定コマンド
+		//Viewport::SetViewport((float)window_width / 2, (float)window_height / 2, (float)window_width / 2, (float)0);
+		//// パイプラインステートとルートシグネチャの設定コマンド
+		//Viewport::SetPipeline(commandList);
+		//// 頂点バッファビューの設定コマンド
+		//commandList->IASetVertexBuffers(0, 1, &vbView);
+		//// 描画コマンド
+		//commandList->DrawInstanced(_countof(vertices), 1, 0, 0); // 全ての頂点を使って描画
+		////-------------------------左下
+		//// ビューポート設定コマンド
+		//Viewport::SetViewport((float)300, (float)window_height / 2, 0, 300, 0, 1.0f);
+		//// パイプラインステートとルートシグネチャの設定コマンド
+		//Viewport::SetPipeline(commandList);
+		//// 頂点バッファビューの設定コマンド
+		//commandList->IASetVertexBuffers(0, 1, &vbView);
+		//// 描画コマンド
+		//commandList->DrawInstanced(_countof(vertices), 1, 0, 0); // 全ての頂点を使って描画
+		////-----------------------右下
+		//// ビューポート設定コマンド
+		//Viewport::SetViewport((float)300, (float)500, 750, 400, 0, 1.0f);
+		//// パイプラインステートとルートシグネチャの設定コマンド
+		//Viewport::SetPipeline(commandList);
+		//// 頂点バッファビューの設定コマンド
+		//commandList->IASetVertexBuffers(0, 1, &vbView);
+		//// 描画コマンド
+		//commandList->DrawInstanced(_countof(vertices), 1, 0, 0); // 全ての頂点を使って描画
 		///////////////////////
 		// 4.描画コマンドここまで//
 		///////////////////////
