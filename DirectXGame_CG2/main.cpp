@@ -6,6 +6,7 @@
 #include <string>
 #include <DirectXMath.h>
 #include "DirectXInput.h"
+#include "Viewport.h"
 using namespace DirectX;
 #include <d3dcompiler.h>
 #pragma comment(lib, "d3dcompiler.lib")
@@ -329,74 +330,78 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		assert(0);
 	}
 
-	// 頂点レイアウト
-	D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
-	{
-	"POSITION",									//セマンティック名
-	0,											//同じセマンティック名が複数あるときに使うインデックス(０でよい)
-	DXGI_FORMAT_R32G32B32_FLOAT,				//要素数とビット数を現す(XYZの３つでfloat型なのでR32G32B32_FLOAT)
-	0,											//入力スロットインデックス(0でよい)
-	D3D12_APPEND_ALIGNED_ELEMENT,				//データのオフセット値(D3D12_APPEND_ALIGNED_ELEMENTだと自動設定)
-	D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,	//入力データ種別(標準はD3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA)
-	0											//一度に描画するインスタンス数(0でよい)
-	}, // (1行で書いたほうが見やすい)
-	//座標以外に　色、テクスチャUV等を渡す場合はさらに続ける
-	};
+	Viewport::ViewPortIni(vsBlob, psBlob, errorBlob, &result, device);
 
-	// グラフィックスパイプライン設定
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC pipelineDesc{};
+#pragma region
 
-	// シェーダーの設定
-	pipelineDesc.VS.pShaderBytecode = vsBlob->GetBufferPointer();
-	pipelineDesc.VS.BytecodeLength = vsBlob->GetBufferSize();
-	pipelineDesc.PS.pShaderBytecode = psBlob->GetBufferPointer();
-	pipelineDesc.PS.BytecodeLength = psBlob->GetBufferSize();
+	//// 頂点レイアウト
+	//D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
+	//{
+	//"POSITION",									//セマンティック名
+	//0,											//同じセマンティック名が複数あるときに使うインデックス(０でよい)
+	//DXGI_FORMAT_R32G32B32_FLOAT,				//要素数とビット数を現す(XYZの３つでfloat型なのでR32G32B32_FLOAT)
+	//0,											//入力スロットインデックス(0でよい)
+	//D3D12_APPEND_ALIGNED_ELEMENT,				//データのオフセット値(D3D12_APPEND_ALIGNED_ELEMENTだと自動設定)
+	//D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,	//入力データ種別(標準はD3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA)
+	//0											//一度に描画するインスタンス数(0でよい)
+	//}, // (1行で書いたほうが見やすい)
+	////座標以外に　色、テクスチャUV等を渡す場合はさらに続ける
+	//};
 
-	// サンプルマスクの設定
-	pipelineDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK; // 標準設定
+	//// グラフィックスパイプライン設定
+	//D3D12_GRAPHICS_PIPELINE_STATE_DESC pipelineDesc{};
 
-	// ラスタライザの設定
-	pipelineDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE; // カリングしない
-	pipelineDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID; // ポリゴン内塗りつぶし	SOLID = 塗りつぶし  WIREFRAME = ワイヤーフレーム
-	pipelineDesc.RasterizerState.DepthClipEnable = true; // 深度クリッピングを有効に
+	//// シェーダーの設定
+	//pipelineDesc.VS.pShaderBytecode = vsBlob->GetBufferPointer();
+	//pipelineDesc.VS.BytecodeLength = vsBlob->GetBufferSize();
+	//pipelineDesc.PS.pShaderBytecode = psBlob->GetBufferPointer();
+	//pipelineDesc.PS.BytecodeLength = psBlob->GetBufferSize();
 
-	// ブレンドステート
-	pipelineDesc.BlendState.RenderTarget[0].RenderTargetWriteMask
-		= D3D12_COLOR_WRITE_ENABLE_ALL; // RBGA全てのチャンネルを描画
+	//// サンプルマスクの設定
+	//pipelineDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK; // 標準設定
 
-	// 頂点レイアウトの設定
-	pipelineDesc.InputLayout.pInputElementDescs = inputLayout;
-	pipelineDesc.InputLayout.NumElements = _countof(inputLayout);
+	//// ラスタライザの設定
+	//pipelineDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE; // カリングしない
+	//pipelineDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID; // ポリゴン内塗りつぶし	SOLID = 塗りつぶし  WIREFRAME = ワイヤーフレーム
+	//pipelineDesc.RasterizerState.DepthClipEnable = true; // 深度クリッピングを有効に
 
-	// 図形の形状設定
-	pipelineDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	//// ブレンドステート
+	//pipelineDesc.BlendState.RenderTarget[0].RenderTargetWriteMask
+	//	= D3D12_COLOR_WRITE_ENABLE_ALL; // RBGA全てのチャンネルを描画
 
-	// その他の設定
-	pipelineDesc.NumRenderTargets = 1; // 描画対象は1つ
-	pipelineDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB; // 0~255指定のRGBA
-	pipelineDesc.SampleDesc.Count = 1; // 1ピクセルにつき1回サンプリング
+	//// 頂点レイアウトの設定
+	//pipelineDesc.InputLayout.pInputElementDescs = inputLayout;
+	//pipelineDesc.InputLayout.NumElements = _countof(inputLayout);
 
-	// ルートシグネチャ
-	ID3D12RootSignature* rootSignature;
-	// ルートシグネチャの設定
-	D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc{};
-	rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-	// ルートシグネチャのシリアライズ
-	ID3DBlob* rootSigBlob = nullptr;
-	result = D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1_0,
-		&rootSigBlob, &errorBlob);
-	assert(SUCCEEDED(result));
-	result = device->CreateRootSignature(0, rootSigBlob->GetBufferPointer(), rootSigBlob->GetBufferSize(),
-		IID_PPV_ARGS(&rootSignature));
-	assert(SUCCEEDED(result));
-	rootSigBlob->Release();
-	// パイプラインにルートシグネチャをセット
-	pipelineDesc.pRootSignature = rootSignature;
+	//// 図形の形状設定
+	//pipelineDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 
-	// パイプランステートの生成
-	ID3D12PipelineState* pipelineState = nullptr;
-	result = device->CreateGraphicsPipelineState(&pipelineDesc, IID_PPV_ARGS(&pipelineState));
-	assert(SUCCEEDED(result));
+	//// その他の設定
+	//pipelineDesc.NumRenderTargets = 1; // 描画対象は1つ
+	//pipelineDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB; // 0~255指定のRGBA
+	//pipelineDesc.SampleDesc.Count = 1; // 1ピクセルにつき1回サンプリング
+
+	//// ルートシグネチャ
+	//ID3D12RootSignature* rootSignature;
+	//// ルートシグネチャの設定
+	//D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc{};
+	//rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+	//// ルートシグネチャのシリアライズ
+	//ID3DBlob* rootSigBlob = nullptr;
+	//result = D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1_0,
+	//	&rootSigBlob, &errorBlob);
+	//assert(SUCCEEDED(result));
+	//result = device->CreateRootSignature(0, rootSigBlob->GetBufferPointer(), rootSigBlob->GetBufferSize(),
+	//	IID_PPV_ARGS(&rootSignature));
+	//assert(SUCCEEDED(result));
+	//rootSigBlob->Release();
+	//// パイプラインにルートシグネチャをセット
+	//pipelineDesc.pRootSignature = rootSignature;
+
+	//// パイプランステートの生成
+	//ID3D12PipelineState* pipelineState = nullptr;
+	//result = device->CreateGraphicsPipelineState(&pipelineDesc, IID_PPV_ARGS(&pipelineState));
+	//assert(SUCCEEDED(result));
 	///////////////////////
 	//描画初期化処理　ここまで//
 	///////////////////////
@@ -452,17 +457,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		}
 
 		if (DirectXInput::IsKeyTrigger(DIK_1)) {
-			if (pipelineDesc.RasterizerState.FillMode == D3D12_FILL_MODE_WIREFRAME) {
-				pipelineDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+			if (Viewport::GetPiplineState() == D3D12_FILL_MODE_WIREFRAME) {
+				Viewport::SetPiplineState(D3D12_FILL_MODE_SOLID);
 			}
-			else if (pipelineDesc.RasterizerState.FillMode == D3D12_FILL_MODE_SOLID) {
-				pipelineDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
+			else if (Viewport::GetPiplineState() == D3D12_FILL_MODE_SOLID) {
+				Viewport::SetPiplineState(D3D12_FILL_MODE_WIREFRAME);
 			}
 		}
-		result = device->CreateGraphicsPipelineState(&pipelineDesc, IID_PPV_ARGS(&pipelineState));
-		assert(SUCCEEDED(result));
-
+		//塗りつぶし・ワイヤーフレーム更新
+		Viewport::PipelineStateUpdata(&result, device);
+		//背景色更新
 		commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+
+
 
 #pragma endregion
 
@@ -473,38 +480,29 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 		//---------------------左上
 		// ビューポート設定コマンド
-		D3D12_VIEWPORT viewport{};
-		viewport.Width = /*window_width*/ window_width / 2;
-		viewport.Height = /*window_height*/ window_height / 2;
-		viewport.TopLeftX = 0;				//画面のどの座標から座標(0,0)にするかを決める
-		viewport.TopLeftY = 0;
-		viewport.MinDepth = 0.0f;
-		viewport.MaxDepth = 1.0f;
-		// ビューポート設定コマンドを、コマンドリストに積む
-		commandList->RSSetViewports(1, &viewport);
+		//D3D12_VIEWPORT viewport{};
+		//viewport.Width = /*window_width*/ window_width / 2;
+		//viewport.Height = /*window_height*/ window_height / 2;
+		//viewport.TopLeftX = 0;				//画面のどの座標から座標(0,0)にするかを決める
+		//viewport.TopLeftY = 0;
+		//viewport.MinDepth = 0.0f;
+		//viewport.MaxDepth = 1.0f;
+		
+		// ビューポート設定コマンド
+		Viewport::SetViewport((float)window_width / 2, (float)window_height / 2, 0, 0,0,1.0f);
 
 		// パイプラインステートとルートシグネチャの設定コマンド
-		commandList->SetPipelineState(pipelineState);
-		commandList->SetGraphicsRootSignature(rootSignature);
+		Viewport::SetPipeline(commandList);
 
 		// プリミティブ形状の設定コマンド
 		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // 三角形リスト
 
-		// 頂点バッファビューの設定コマンド
-		commandList->IASetVertexBuffers(0, 1, &vbView);
-
-		// 描画コマンド
-		commandList->DrawInstanced(_countof(vertices), 1, 0, 0); // 全ての頂点を使って描画
-
-		//-------------------右上
-		viewport.Width = window_width / 2;
-		viewport.Height = window_height / 2;
-		viewport.TopLeftX = 700;				//画面のどの座標から座標(0,0)にするかを決める
-		viewport.TopLeftY = 0;
-		viewport.MinDepth = 0.0f;
-		viewport.MaxDepth = 1.0f;
-		// ビューポート設定コマンドを、コマンドリストに積む
-		commandList->RSSetViewports(1, &viewport);
+		Viewport::Draw(commandList, vbView, *vertices);
+		//// 頂点バッファビューの設定コマンド
+		//commandList->IASetVertexBuffers(0, 1, &vbView);
+		//
+		//// 描画コマンド
+		//commandList->DrawInstanced(_countof(vertices), 1, 0, 0); // 全ての頂点を使って描画
 
 		// シザー矩形
 		D3D12_RECT scissorRect{};
@@ -516,54 +514,58 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		// シザー矩形設定コマンドを、コマンドリストに積む
 		commandList->RSSetScissorRects(1, &scissorRect);
 
-		// パイプラインステートとルートシグネチャの設定コマンド
-		commandList->SetPipelineState(pipelineState);
-		commandList->SetGraphicsRootSignature(rootSignature);
+		////-------------------右上
+		//viewport.Width = window_width / 3;
+		//viewport.Height = window_height / 2;
+		//viewport.TopLeftX = 0;				//画面のどの座標から座標(0,0)にするかを決める
+		//viewport.TopLeftY = 0;
+		//viewport.MinDepth = 0.0f;
+		//viewport.MaxDepth = 1.0f;
+		//// ビューポート設定コマンドを、コマンドリストに積む
+		//commandList->RSSetViewports(1, &viewport);
 
-		// プリミティブ形状の設定コマンド
-		//commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // 三角形リスト
+		//// 頂点バッファビューの設定コマンド
+		//commandList->IASetVertexBuffers(0, 1, &vbView);
+
+		//
+
+		//
+
+		//// 描画コマンド
+		//commandList->DrawInstanced(_countof(vertices), 1, 0, 0); // 全ての頂点を使って描画
+
+		////-----------------------左下
+		//viewport.Width = window_width / 2;
+		//viewport.Height = window_height / 2;
+		//viewport.TopLeftX = 0;				//画面のどの座標から座標(0,0)にするかを決める
+		//viewport.TopLeftY = 300;
+		//viewport.MinDepth = 0.0f;
+		//viewport.MaxDepth = 1.0f;
+		//// ビューポート設定コマンドを、コマンドリストに積む
+		//commandList->RSSetViewports(1, &viewport);
 
 
 
-		// 描画コマンド
-		commandList->DrawInstanced(_countof(vertices), 1, 0, 0); // 全ての頂点を使って描画
+		//// 頂点バッファビューの設定コマンド
+		//commandList->IASetVertexBuffers(0, 1, &vbView);
 
-		//-----------------------左下
-		viewport.Width = window_width / 2;
-		viewport.Height = window_height / 2;
-		viewport.TopLeftX = 0;				//画面のどの座標から座標(0,0)にするかを決める
-		viewport.TopLeftY = 300;
-		viewport.MinDepth = 0.0f;
-		viewport.MaxDepth = 1.0f;
-		// ビューポート設定コマンドを、コマンドリストに積む
-		commandList->RSSetViewports(1, &viewport);
+		//// 描画コマンド
+		//commandList->DrawInstanced(_countof(vertices), 1, 0, 0); // 全ての頂点を使って描画
+		////-----------------------右下
+		//viewport.Width = window_width / 2;
+		//viewport.Height = window_height / 2;
+		//viewport.TopLeftX = 600;				//画面のどの座標から座標(0,0)にするかを決める
+		//viewport.TopLeftY = 300;
+		//viewport.MinDepth = 0.0f;
+		//viewport.MaxDepth = 1.0f;
+		//// ビューポート設定コマンドを、コマンドリストに積む
+		//commandList->RSSetViewports(1, &viewport);
 
-		// プリミティブ形状の設定コマンド
-		//commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // 三角形リスト
+		//// 頂点バッファビューの設定コマンド
+		//commandList->IASetVertexBuffers(0, 1, &vbView);
 
-		// 頂点バッファビューの設定コマンド
-		commandList->IASetVertexBuffers(0, 1, &vbView);
-
-		// 描画コマンド
-		commandList->DrawInstanced(_countof(vertices), 1, 0, 0); // 全ての頂点を使って描画
-		//-----------------------右下
-		viewport.Width = window_width / 2;
-		viewport.Height = window_height / 2;
-		viewport.TopLeftX = 600;				//画面のどの座標から座標(0,0)にするかを決める
-		viewport.TopLeftY = 300;
-		viewport.MinDepth = 0.0f;
-		viewport.MaxDepth = 1.0f;
-		// ビューポート設定コマンドを、コマンドリストに積む
-		commandList->RSSetViewports(1, &viewport);
-
-		// プリミティブ形状の設定コマンド
-		//commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // 三角形リスト
-
-		// 頂点バッファビューの設定コマンド
-		commandList->IASetVertexBuffers(0, 1, &vbView);
-
-		// 描画コマンド
-		commandList->DrawInstanced(_countof(vertices), 1, 0, 0); // 全ての頂点を使って描画
+		//// 描画コマンド
+		//commandList->DrawInstanced(_countof(vertices), 1, 0, 0); // 全ての頂点を使って描画
 
 		///////////////////////
 		// 4.描画コマンドここまで//
