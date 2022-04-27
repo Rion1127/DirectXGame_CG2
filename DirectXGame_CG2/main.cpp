@@ -477,33 +477,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		///////////////////////
 		// 4.描画コマンドここから//
 		///////////////////////
-
-		//---------------------左上
-		// ビューポート設定コマンド
-		//D3D12_VIEWPORT viewport{};
-		//viewport.Width = /*window_width*/ window_width / 2;
-		//viewport.Height = /*window_height*/ window_height / 2;
-		//viewport.TopLeftX = 0;				//画面のどの座標から座標(0,0)にするかを決める
-		//viewport.TopLeftY = 0;
-		//viewport.MinDepth = 0.0f;
-		//viewport.MaxDepth = 1.0f;
-		
-		// ビューポート設定コマンド
-		Viewport::SetViewport((float)window_width / 2, (float)window_height / 2, 0, 0,0,1.0f);
-
-		// パイプラインステートとルートシグネチャの設定コマンド
-		Viewport::SetPipeline(commandList);
-
-		// プリミティブ形状の設定コマンド
-		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // 三角形リスト
-
-		Viewport::Draw(commandList, vbView, *vertices);
-		//// 頂点バッファビューの設定コマンド
-		//commandList->IASetVertexBuffers(0, 1, &vbView);
-		//
-		//// 描画コマンド
-		//commandList->DrawInstanced(_countof(vertices), 1, 0, 0); // 全ての頂点を使って描画
-
 		// シザー矩形
 		D3D12_RECT scissorRect{};
 		//指定座標の中のみ描画するための処理
@@ -514,59 +487,44 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		// シザー矩形設定コマンドを、コマンドリストに積む
 		commandList->RSSetScissorRects(1, &scissorRect);
 
-		////-------------------右上
-		//viewport.Width = window_width / 3;
-		//viewport.Height = window_height / 2;
-		//viewport.TopLeftX = 0;				//画面のどの座標から座標(0,0)にするかを決める
-		//viewport.TopLeftY = 0;
-		//viewport.MinDepth = 0.0f;
-		//viewport.MaxDepth = 1.0f;
-		//// ビューポート設定コマンドを、コマンドリストに積む
-		//commandList->RSSetViewports(1, &viewport);
-
-		//// 頂点バッファビューの設定コマンド
-		//commandList->IASetVertexBuffers(0, 1, &vbView);
-
-		//
-
-		//
-
-		//// 描画コマンド
-		//commandList->DrawInstanced(_countof(vertices), 1, 0, 0); // 全ての頂点を使って描画
-
-		////-----------------------左下
-		//viewport.Width = window_width / 2;
-		//viewport.Height = window_height / 2;
-		//viewport.TopLeftX = 0;				//画面のどの座標から座標(0,0)にするかを決める
-		//viewport.TopLeftY = 300;
-		//viewport.MinDepth = 0.0f;
-		//viewport.MaxDepth = 1.0f;
-		//// ビューポート設定コマンドを、コマンドリストに積む
-		//commandList->RSSetViewports(1, &viewport);
-
-
-
-		//// 頂点バッファビューの設定コマンド
-		//commandList->IASetVertexBuffers(0, 1, &vbView);
-
-		//// 描画コマンド
-		//commandList->DrawInstanced(_countof(vertices), 1, 0, 0); // 全ての頂点を使って描画
-		////-----------------------右下
-		//viewport.Width = window_width / 2;
-		//viewport.Height = window_height / 2;
-		//viewport.TopLeftX = 600;				//画面のどの座標から座標(0,0)にするかを決める
-		//viewport.TopLeftY = 300;
-		//viewport.MinDepth = 0.0f;
-		//viewport.MaxDepth = 1.0f;
-		//// ビューポート設定コマンドを、コマンドリストに積む
-		//commandList->RSSetViewports(1, &viewport);
-
-		//// 頂点バッファビューの設定コマンド
-		//commandList->IASetVertexBuffers(0, 1, &vbView);
-
-		//// 描画コマンド
-		//commandList->DrawInstanced(_countof(vertices), 1, 0, 0); // 全ての頂点を使って描画
-
+		//-------------------------左上
+		// ビューポート設定コマンド
+		Viewport::SetViewport((float)window_width / 2, (float)window_height / 2, 0, 0);
+		// パイプラインステートとルートシグネチャの設定コマンド
+		Viewport::SetPipeline(commandList);
+		// プリミティブ形状の設定コマンド
+		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // 三角形リスト
+		// 頂点バッファビューの設定コマンド
+		commandList->IASetVertexBuffers(0, 1, &vbView);
+		// 描画コマンド
+		commandList->DrawInstanced(_countof(vertices), 1, 0, 0); // 全ての頂点を使って描画
+		//-------------------------右上
+		// ビューポート設定コマンド
+		Viewport::SetViewport((float)window_width / 2, (float)window_height / 2, (float)window_width / 2, (float)0);
+		// パイプラインステートとルートシグネチャの設定コマンド
+		Viewport::SetPipeline(commandList);
+		// 頂点バッファビューの設定コマンド
+		commandList->IASetVertexBuffers(0, 1, &vbView);
+		// 描画コマンド
+		commandList->DrawInstanced(_countof(vertices), 1, 0, 0); // 全ての頂点を使って描画
+		//-------------------------左下
+		// ビューポート設定コマンド
+		Viewport::SetViewport((float)300, (float)window_height / 2, (float)0, (float)window_height / 2);
+		// パイプラインステートとルートシグネチャの設定コマンド
+		Viewport::SetPipeline(commandList);
+		// 頂点バッファビューの設定コマンド
+		commandList->IASetVertexBuffers(0, 1, &vbView);
+		// 描画コマンド
+		commandList->DrawInstanced(_countof(vertices), 1, 0, 0); // 全ての頂点を使って描画
+		//-----------------------右下
+		// ビューポート設定コマンド
+		Viewport::SetViewport((float)300, (float)200, (float)window_width / 2, (float)window_height / 2);
+		// パイプラインステートとルートシグネチャの設定コマンド
+		Viewport::SetPipeline(commandList);
+		// 頂点バッファビューの設定コマンド
+		commandList->IASetVertexBuffers(0, 1, &vbView);
+		// 描画コマンド
+		commandList->DrawInstanced(_countof(vertices), 1, 0, 0); // 全ての頂点を使って描画
 		///////////////////////
 		// 4.描画コマンドここまで//
 		///////////////////////

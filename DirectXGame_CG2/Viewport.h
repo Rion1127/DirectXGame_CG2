@@ -18,7 +18,7 @@ public:
 	// パイプラインステートとルートシグネチャの設定コマンド
 	static void SetPipeline(ID3D12GraphicsCommandList* commandList);
 	//描画コマンド
-	static void Draw(ID3D12GraphicsCommandList* commandList, D3D12_VERTEX_BUFFER_VIEW vbView, const XMFLOAT3& vertices);
+	//static void Draw(ID3D12GraphicsCommandList* commandList, D3D12_VERTEX_BUFFER_VIEW vbView, const XMFLOAT3& vertices);
 
 	static int GetPiplineState();
 private:

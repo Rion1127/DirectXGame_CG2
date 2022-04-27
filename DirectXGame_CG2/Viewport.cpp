@@ -142,18 +142,19 @@ void Viewport::SetPipeline(ID3D12GraphicsCommandList* commandList)
 	commandList->SetGraphicsRootSignature(rootSignature);
 }
 
-void Viewport::Draw(ID3D12GraphicsCommandList* commandList,D3D12_VERTEX_BUFFER_VIEW vbView, const XMFLOAT3& vertices)
-{
-	std::vector<XMFLOAT3> a = { vertices };
-	std::size_t size_t = a.size();
-
-	// 頂点バッファビューの設定コマンド
-	commandList->IASetVertexBuffers(0, 1, &vbView);
-
-	// 描画コマンド
-	commandList->DrawInstanced(size_t, 1, 0, 0); // 全ての頂点を使って描画
-
-}
+//void Viewport::Draw(ID3D12GraphicsCommandList* commandList,D3D12_VERTEX_BUFFER_VIEW vbView, const XMFLOAT3& vertices)
+//{
+//	std::vector<XMFLOAT3> a = { vertices };
+//	std::size_t size_t = a.size();
+//	
+//
+//	// 頂点バッファビューの設定コマンド
+//	commandList->IASetVertexBuffers(0, 1, &vbView);
+//
+//	// 描画コマンド
+//	commandList->DrawInstanced(size_t, 1, 0, 0); // 全ての頂点を使って描画
+//
+//}
 
 int Viewport::GetPiplineState()
 {
