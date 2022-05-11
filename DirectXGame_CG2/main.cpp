@@ -232,9 +232,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		///////////////////////
 		// 頂点データ
 	XMFLOAT3 vertices[] = {
+
 	{ -0.5f, -0.5f, 0.0f }, // 左下
-	{ -0.5f, +0.5f, 0.0f }, // 左上
 	{ +0.5f, -0.5f, 0.0f }, // 右下
+	{ -0.5f, 0, 0.0f }, // 左中
+	{ +0.5f, 0, 0.0f }, // 右中
+	{ -0.5f, +0.5f, 0.0f }, // 左上
+	{ +0.5f, +0.5f, 0.0f }, // 右上
 	};
 	// 頂点データ全体のサイズ = 頂点データ一つ分のサイズ * 頂点データの要素数
 	UINT sizeVB = static_cast<UINT>(sizeof(XMFLOAT3) * _countof(vertices));
@@ -365,13 +369,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	result = constBufferMaterial->Map(0, nullptr, (void**)&constMapMaterial);	//マッピング
 	assert(SUCCEEDED(result));
 	//値を書き込むと自動的に転送される
-	constMapMaterial->colro = XMFLOAT4(1, 0, 0, 0.5f);
+	constMapMaterial->colro = XMFLOAT4(1, 1, 1, 1);
 
 
 
 #pragma endregion
 
 #pragma endregion
+
 
 	XMFLOAT4 testColor(0, 0, 0, 0.5f);
 
@@ -436,10 +441,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		//背景色更新
 		commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 
-		testColor.x += 0.01f;
-
-		//値を書き込むと自動的に転送される
-		constMapMaterial->colro = testColor;
+		//三角形の色変更
+		//testColor.x += 0.01f;
+		////値を書き込むと自動的に転送される
+		//constMapMaterial->colro = testColor;
 
 		//ーーーーーーーーーーここまで更新処理記入ーーーーーーーーーー//
 #pragma endregion
@@ -463,7 +468,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		// パイプラインステートとルートシグネチャの設定コマンド
 		Viewport::SetPipeline(commandList);
 		// プリミティブ形状の設定コマンド
-		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // 三角形リスト
+		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP); // 三角形リスト
+		// D3D_PRIMITIVE_TOPOLOGY_POINTLIST		点のリスト
+		// D3D_PRIMITIVE_TOPOLOGY_LINELIST		線のリスト
+		// D3D_PRIMITIVE_TOPOLOGY_LINESTRIP		線のストリップ
+		// D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST	三角形リスト
+		// D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP	三角形のストリップ
+		
 		// 頂点バッファビューの設定コマンド
 		commandList->IASetVertexBuffers(0, 1, &vbView);
 
@@ -498,6 +509,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		//commandList->IASetVertexBuffers(0, 1, &vbView);
 		//// 描画コマンド
 		//commandList->DrawInstanced(_countof(vertices), 1, 0, 0); // 全ての頂点を使って描画
+
 		///////////////////////
 		// 4.描画コマンドここまで//
 		///////////////////////
