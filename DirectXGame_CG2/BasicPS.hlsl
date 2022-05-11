@@ -1,4 +1,9 @@
+
+cbuffer ConstBufferDataMaterial : register(b0) {
+	float4 color;	//色(RGBA)
+}
+
 float4 main() : SV_TARGET
 {
-	return float4(1.0f, 1.0f, 1.0f, 1.0f);	//色変更
+	return color;	//色変更
 }

@@ -28,6 +28,10 @@ LRESULT WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	return DefWindowProc(hwnd, msg, wparam, lparam);
 }
 
+struct ConstBufferDataMaterial {
+	XMFLOAT4 colro;
+};
+
 //Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
@@ -332,7 +336,46 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 	Viewport::ViewPortIni(vsBlob, psBlob, errorBlob, &result, device);
 
-		//ゲームループ
+#pragma region	シェーダーに色を渡す
+	//ヒープ設定
+	D3D12_HEAP_PROPERTIES cbHeapProp{};
+	cbHeapProp.Type = D3D12_HEAP_TYPE_UPLOAD;
+	//リソース設定
+	D3D12_RESOURCE_DESC cbResourceDesc{};
+	cbResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	cbResourceDesc.Width = (sizeof(ConstBufferDataMaterial) + 0xff) & ~0xff;
+	cbResourceDesc.Height = 1;
+	cbResourceDesc.DepthOrArraySize = 1;
+	cbResourceDesc.MipLevels = 1;
+	cbResourceDesc.SampleDesc.Count = 1;
+	cbResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+	ID3D12Resource* constBufferMaterial = nullptr;
+	//呈すバッファの生成
+	result = device->CreateCommittedResource(
+		&cbHeapProp,		//ヒープ設定
+		D3D12_HEAP_FLAG_NONE,
+		&cbResourceDesc,	//リソース設定
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&constBufferMaterial));
+	assert(SUCCEEDED(result));
+	//定数バッファのマッピング
+	ConstBufferDataMaterial* constMapMaterial = nullptr;
+	result = constBufferMaterial->Map(0, nullptr, (void**)&constMapMaterial);	//マッピング
+	assert(SUCCEEDED(result));
+	//値を書き込むと自動的に転送される
+	constMapMaterial->colro = XMFLOAT4(1, 0, 0, 0.5f);
+
+
+
+#pragma endregion
+
+#pragma endregion
+
+	XMFLOAT4 testColor(0, 0, 0, 0.5f);
+
+	//ゲームループ
 	while (true) {
 #pragma region ウィンドウメッセージ処理
 		///////////////////////
@@ -374,7 +417,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		// 3.画面クリア R G B A
 		FLOAT clearColor[] = { 0.1f,0.25f, 0.5f,0.0f }; // 青っぽい色
 
-		//ーーーーーここからプログラム記述ーーーーーーーー//
+		//ーーーーーーーーここから更新処理記述ーーーーーーーーーー//
 		////数字の0キーが押されていたら
 		if (DirectXInput::IsKeyDown(DIK_SPACE)) {
 			clearColor[0] = 0.8f;
@@ -393,8 +436,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		//背景色更新
 		commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 
+		testColor.x += 0.01f;
 
+		//値を書き込むと自動的に転送される
+		constMapMaterial->colro = testColor;
 
+		//ーーーーーーーーーーここまで更新処理記入ーーーーーーーーーー//
 #pragma endregion
 
 #pragma region 描画コマンド
@@ -419,6 +466,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // 三角形リスト
 		// 頂点バッファビューの設定コマンド
 		commandList->IASetVertexBuffers(0, 1, &vbView);
+
+		//定数バッファビュー
+		commandList->SetGraphicsRootConstantBufferView(0, constBufferMaterial->GetGPUVirtualAddress());
 		// 描画コマンド
 		commandList->DrawInstanced(_countof(vertices), 1, 0, 0); // 全ての頂点を使って描画
 		////-------------------------右上

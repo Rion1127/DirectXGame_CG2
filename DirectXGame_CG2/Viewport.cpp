@@ -55,6 +55,10 @@ ID3D12PipelineState* pipelineState = nullptr;
 
 // ビューポート設定コマンド
 D3D12_VIEWPORT viewport{};
+
+//ルートのパラメータ設定
+D3D12_ROOT_PARAMETER rootParam = {};
+
 #pragma endregion
 
 void Viewport::ViewPortIni(ID3DBlob* vsBlob, ID3DBlob* psBlob, ID3DBlob* errorBlob, HRESULT* result, ID3D12Device* device)
@@ -118,12 +122,19 @@ void Viewport::ViewPortIni(ID3DBlob* vsBlob, ID3DBlob* psBlob, ID3DBlob* errorBl
 	pipelineDesc.NumRenderTargets = 1; // 描画対象は1つ
 	pipelineDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB; // 0~255指定のRGBA
 	pipelineDesc.SampleDesc.Count = 1; // 1ピクセルにつき1回サンプリング
-
+	//ルートのパラメータ設定
+	rootParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;	//定数バッファビュー
+	rootParam.Descriptor.ShaderRegister = 0;					//定数バッファ番号
+	rootParam.Descriptor.RegisterSpace = 0;						//デフォルト値
+	rootParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;	//全てのシェーダから見える
 	//// ルートシグネチャ
 	//ID3D12RootSignature* rootSignature;
 	//// ルートシグネチャの設定
 	//D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc{};
 	rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+	rootSignatureDesc.pParameters = &rootParam;	
+	rootSignatureDesc.NumParameters = 1;
+
 	//// ルートシグネチャのシリアライズ
 	//ID3DBlob* rootSigBlob = nullptr;
 	*result = D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1_0,
@@ -140,6 +151,8 @@ void Viewport::ViewPortIni(ID3DBlob* vsBlob, ID3DBlob* psBlob, ID3DBlob* errorBl
 	//ID3D12PipelineState* pipelineState = nullptr;
 	*result = device->CreateGraphicsPipelineState(&pipelineDesc, IID_PPV_ARGS(&pipelineState));
 	assert(SUCCEEDED(result));
+
+	
 }
 //ぬりつぶしorワイヤーフレームセット
 void Viewport::SetPiplineState(D3D12_FILL_MODE mode)
