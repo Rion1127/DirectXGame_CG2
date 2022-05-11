@@ -39,6 +39,11 @@ D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
 	0											//一度に描画するインスタンス数(0でよい)
 	}, // (1行で書いたほうが見やすい)
 	//座標以外に　色、テクスチャUV等を渡す場合はさらに続ける
+	{
+		"TEXCOORD",0,DXGI_FORMAT_R32G32_FLOAT,0,
+		D3D12_APPEND_ALIGNED_ELEMENT,
+		D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0
+	}
 };
 
 // グラフィックスパイプライン設定
