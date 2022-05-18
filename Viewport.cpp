@@ -200,7 +200,7 @@ void Viewport::SetPiplineState(D3D12_FILL_MODE mode)
 void Viewport::PipelineStateUpdata(HRESULT* result, ID3D12Device* device)
 {
 	*result = device->CreateGraphicsPipelineState(&pipelineDesc, IID_PPV_ARGS(&pipelineState));
-	assert(SUCCEEDED(result));
+	assert(SUCCEEDED(*result));
 }
 // ビューポート設定コマンド
 void Viewport::SetViewport(float Width, float height, float topLeftX, float topLeftY, float minDepth, float maxDepth)
