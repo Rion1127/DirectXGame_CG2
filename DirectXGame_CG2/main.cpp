@@ -432,13 +432,23 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	const size_t imageDataCount = textureWidth * textureHeight;
 	//画像イメージデータ配列
 	XMFLOAT4* imageData = new XMFLOAT4[imageDataCount];
-	
+
 	//全ピクセルの色を初期化
 	for (size_t i = 0; i < imageDataCount; i++) {
-		imageData[i].x = 1.0f;	// R
-		imageData[i].y = 0.0f;	// G
-		imageData[i].z = 0.0f;	// B
-		imageData[i].w = 1.0f;	// A
+
+		if ((i / 10) % 2 == 0) {
+			imageData[i].x = 1.0f;	// R
+			imageData[i].y = 0.0f;	// G
+			imageData[i].z = 0.0f;	// B
+			imageData[i].w = 1.0f;	// A
+		}
+		else {
+			imageData[i].x = 0.0f;	// R
+			imageData[i].y = 0.0f;	// G
+			imageData[i].z = 0.0f;	// B
+			imageData[i].w = 0.0f;	// A
+		}
+
 	}
 	//ヒープ設定
 	D3D12_HEAP_PROPERTIES textureHeapProp{};
@@ -501,21 +511,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 	//CBV,SRV,UAVの1古文のサイズを取得
 	UINT descriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	//SRVヒープの先頭ハンドルを取得
-	D3D12_CPU_DESCRIPTOR_HANDLE srvHandle = srvHeap->GetCPUDescriptorHandleForHeapStart();
+
 	//ハンドルを1つし占める（SRVの位置）
 	srvHandle.ptr += descriptorSize * 1;
 
 	//CBV(コンスタントバッファビュー)の設定
 	D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc{};
-	
+
 	//定数バッファビュー生成
 	device->CreateConstantBufferView(&cbvDesc, srvHandle);
-	//////////////////////////////
 
-	//04_02テクスチャマッピングの24ページまで
 
-	/////////////////////////////
+
 
 #pragma endregion
 
@@ -600,10 +607,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		///////////////////////
 		// 4.描画コマンドここから//
 		///////////////////////
-		
+
 		//インデックスバッファビューの設定コマンド
 		commandList->IASetIndexBuffer(&ibView);
-		
+
 
 		// シザー矩形
 		D3D12_RECT scissorRect{};
@@ -632,9 +639,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 		//定数バッファビュー
 		commandList->SetGraphicsRootConstantBufferView(0, constBufferMaterial->GetGPUVirtualAddress());
-		
+
+		//SRVヒープの設定コマンド
+		commandList->SetDescriptorHeaps(1, &srvHeap);
+		//SRVヒープの先頭ハンドルを取得(SRVを指しているはず)
+		D3D12_GPU_DESCRIPTOR_HANDLE srvGpuhHandle = srvHeap->GetGPUDescriptorHandleForHeapStart();
+		//SRVヒープの先頭にあるSRVをルートパラメータ1番に設定
+		commandList->SetGraphicsRootDescriptorTable(1, srvGpuhHandle);
+
 		// 描画コマンド
-		commandList->DrawIndexedInstanced(_countof(indices), 1, 0, 0,0); // 全ての頂点を使って描画
+		commandList->DrawIndexedInstanced(_countof(indices), 1, 0, 0, 0); // 全ての頂点を使って描画
 		////-------------------------右上
 		//// ビューポート設定コマンド
 		//Viewport::SetViewport((float)window_width / 2, (float)window_height / 2, (float)window_width / 2, (float)0);

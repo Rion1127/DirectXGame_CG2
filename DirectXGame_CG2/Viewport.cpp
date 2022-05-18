@@ -62,7 +62,13 @@ ID3D12PipelineState* pipelineState = nullptr;
 D3D12_VIEWPORT viewport{};
 
 //ルートのパラメータ設定
-D3D12_ROOT_PARAMETER rootParam = {};
+D3D12_ROOT_PARAMETER rootParams[2] = {};
+
+//デスクリプタレンジの設定
+D3D12_DESCRIPTOR_RANGE descriptorRange{};
+//テクスチャサンプラーの設定
+D3D12_STATIC_SAMPLER_DESC samplerDesc{};
+
 
 #pragma endregion
 
@@ -127,21 +133,47 @@ void Viewport::ViewPortIni(ID3DBlob* vsBlob, ID3DBlob* psBlob, ID3DBlob* errorBl
 	pipelineDesc.NumRenderTargets = 1; // 描画対象は1つ
 	pipelineDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB; // 0~255指定のRGBA
 	pipelineDesc.SampleDesc.Count = 1; // 1ピクセルにつき1回サンプリング
+
+	//デスクリプタレンジの設定
+	descriptorRange.NumDescriptors = 1;					//一度の描画に好かうテクスチャが1枚なので1
+	descriptorRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	descriptorRange.BaseShaderRegister = 0;				//テクスチャレジスタ0番
+	descriptorRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
 	//ルートのパラメータ設定
-	rootParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;	//定数バッファビュー
-	rootParam.Descriptor.ShaderRegister = 0;					//定数バッファ番号
-	rootParam.Descriptor.RegisterSpace = 0;						//デフォルト値
-	rootParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;	//全てのシェーダから見える
+	//定数バッファ0番
+	rootParams[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;	//定数バッファビュー
+	rootParams[0].Descriptor.ShaderRegister = 0;					//定数バッファ番号
+	rootParams[0].Descriptor.RegisterSpace = 0;						//デフォルト値
+	rootParams[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;	//全てのシェーダから見える
+	//テクスチャレジスタ0番
+	rootParams[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;	//種類
+	rootParams[1].DescriptorTable.pDescriptorRanges = &descriptorRange;					//でスクリプタレンジ
+	rootParams[1].DescriptorTable.NumDescriptorRanges = 1;						//デスクリプタレンジ数
+	rootParams[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;	//全てのシェーダから見える
+
+	//テクスチャサンプラーの設定
+	samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;					//横繰り返し（タイリング）
+	samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;					//縦繰り返し（タイリング）
+	samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;					//奥行繰り返し（タイリング）
+	samplerDesc.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;	//ボーダーの時は黒
+	samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;					//全てリニア保管
+	samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;									//ミップマップ最大値
+	samplerDesc.MinLOD = 0.0f;												//ミップマップ最小値
+	samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+	samplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;			//ピクセルシェーダからのみ使用可能
+
 	//// ルートシグネチャ
 	//ID3D12RootSignature* rootSignature;
 	//// ルートシグネチャの設定
 	//D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc{};
 	rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-	rootSignatureDesc.pParameters = &rootParam;	
-	rootSignatureDesc.NumParameters = 1;
+	rootSignatureDesc.pParameters = rootParams;					//ルートパラメータの先頭アドレス
+	rootSignatureDesc.NumParameters = _countof(rootParams);		//ルートパラメータ数
+	rootSignatureDesc.pStaticSamplers = &samplerDesc;
+	rootSignatureDesc.NumStaticSamplers = 1;
 
 	//// ルートシグネチャのシリアライズ
-	//ID3DBlob* rootSigBlob = nullptr;
 	*result = D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1_0,
 		&rootSigBlob, &errorBlob);
 	assert(SUCCEEDED(result));
