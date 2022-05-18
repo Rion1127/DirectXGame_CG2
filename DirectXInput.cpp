@@ -17,8 +17,9 @@ static BYTE keys[256] = {};
 //‘SƒL[‚Ì“ü—Íó‘Ô‚ğæ“¾‚·‚é
 static BYTE oldkeys[256] = {};
 
-void DirectXInput::InputIni(HRESULT result, WNDCLASSEX w, HWND hwnd)	//‰Šú‰»
+void DirectXInput::InputIni(WNDCLASSEX w, HWND hwnd)	//‰Šú‰»
 {
+	HRESULT result;
 	//DirectInput‚Ì‰Šú‰»
 	//static IDirectInput8* directInput = nullptr;
 	result = DirectInput8Create(

@@ -144,6 +144,7 @@
     <ClCompile Include="DirectXInput.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Viewport.cpp" />
+    <ClCompile Include="WindowsAPI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="BasicPS.hlsl">
@@ -162,6 +163,7 @@
   <ItemGroup>
     <ClInclude Include="DirectXInput.h" />
     <ClInclude Include="Viewport.h" />
+    <ClInclude Include="WindowsAPI.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Basic.hlsli" />

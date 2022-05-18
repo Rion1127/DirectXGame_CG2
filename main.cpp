@@ -7,6 +7,7 @@
 #include <DirectXMath.h>
 #include "DirectXInput.h"
 #include "Viewport.h"
+#include "WindowsAPI.h"
 using namespace DirectX;
 #include <d3dcompiler.h>
 #pragma comment(lib, "d3dcompiler.lib")
@@ -40,6 +41,13 @@ struct Vertex {
 };
 
 
+/////////////////////////
+
+//WindowsAPIクラス制作途中
+
+/////////////////////////
+
+
 //Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
@@ -47,41 +55,45 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	//-+-+-+-+-+-+-+-+-+-+-+-+-//
 	//WindowsAPI初期化処理 ここから//
 	//-+-+-+-+-+-+-+-+-+-+-+-+-//
-	const int window_width = 1280;	//横幅
-	const int window_height = 720;	//縦幅
+	//const int window_width = 1280;	//横幅
+	//const int window_height = 720;	//縦幅
 
-	//ウィンドウクラスの設定
-	WNDCLASSEX w{};
-	w.cbSize = sizeof(WNDCLASSEX);
-	w.lpfnWndProc = (WNDPROC)WindowProc;		//ウィンドウプロシージャを設定
-	w.lpszClassName = L"DirectXGame";			//ウィンドウクラス名
-	w.hInstance = GetModuleHandle(nullptr);		//ウィンドウハンドル
-	w.hCursor = LoadCursor(NULL, IDC_ARROW);	//カーソル指定
+	////ウィンドウクラスの設定
+	//WNDCLASSEX w{};
+	//w.cbSize = sizeof(WNDCLASSEX);
+	//w.lpfnWndProc = (WNDPROC)WindowProc;		//ウィンドウプロシージャを設定
+	//w.lpszClassName = L"DirectXGame";			//ウィンドウクラス名
+	//w.hInstance = GetModuleHandle(nullptr);		//ウィンドウハンドル
+	//w.hCursor = LoadCursor(NULL, IDC_ARROW);	//カーソル指定
 
-	//ウィンドウクラスをOSに登録する
-	RegisterClassEx(&w);
-	//ウィンドウサイズ{　X座標　Y座標　横幅　縦幅}
-	RECT wrc = { 0,0,window_width,window_height };
-	//自動でサイズを修正する
-	AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, false);
+	////ウィンドウクラスをOSに登録する
+	//RegisterClassEx(&w);
+	////ウィンドウサイズ{　X座標　Y座標　横幅　縦幅}
+	//RECT wrc = { 0,0,window_width,window_height };
+	////自動でサイズを修正する
+	//AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, false);
 
-	//ウィンドウオブジェクトの生成
-	HWND hwnd = CreateWindow(w.lpszClassName,
-		L"DirectXGame",
-		WS_OVERLAPPEDWINDOW,
-		CW_USEDEFAULT,
-		CW_USEDEFAULT,
-		wrc.right - wrc.left,
-		wrc.bottom - wrc.top,
-		nullptr,
-		nullptr,
-		w.hInstance,
-		nullptr);
+	////ウィンドウオブジェクトの生成
+	//HWND hwnd = CreateWindow(w.lpszClassName,
+	//	L"DirectXGame",
+	//	WS_OVERLAPPEDWINDOW,
+	//	CW_USEDEFAULT,
+	//	CW_USEDEFAULT,
+	//	wrc.right - wrc.left,
+	//	wrc.bottom - wrc.top,
+	//	nullptr,
+	//	nullptr,
+	//	w.hInstance,
+	//	nullptr);
 
-	//ウィンドウを表示状態にする
-	ShowWindow(hwnd, SW_SHOW);
+	////ウィンドウを表示状態にする
+	//ShowWindow(hwnd, SW_SHOW);
 
-	MSG msg{};		//メッセージ
+	//MSG msg{};		//メッセージ
+	WindowsAPI winAPI;
+
+	winAPI.UpdataWindowsAPI();
+	
 	//-+-+-+-+-+-+-+-+-+-+-+-+-//
 	//WindowsAPI初期化処理 ここまで//
 	//-+-+-+-+-+-+-+-+-+-+-+-+-//
@@ -227,7 +239,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	result = device->CreateFence(fenceVal, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
 
 	//キーボードインプット初期化
-	DirectXInput::InputIni(result, w, hwnd);
+	DirectXInput::InputIni(w, hwnd);
 
 	//-+-+-+-+-+-+-+-+-+-+-+-//
 	//DirectX初期化処理　ここまで//
@@ -238,6 +250,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	///////////////////////
 	//描画初期化処理　ここから//
 	///////////////////////
+	
+	Viewport viewport;
 	// 頂点データ
 	Vertex vertices[] = {
 		{{ -0.4f,-0.7f,0.0f} ,{0.0f,1.0f}},//左下
@@ -351,7 +365,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		assert(0);
 	}
 
-	Viewport::ViewPortIni(vsBlob, psBlob, errorBlob, &result, device);
+	viewport.ViewPortIni(vsBlob, psBlob, errorBlob, device);
 
 #pragma region 頂点インデックス
 	//インデックスデータ全体のサイズ
@@ -472,7 +486,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	//		imageData[i].w = 0.0f;	// A
 	//	}
 	//}
-	
+
 
 	//ヒープ設定
 	D3D12_HEAP_PROPERTIES textureHeapProp{};
@@ -619,15 +633,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		}
 
 		if (DirectXInput::IsKeyTrigger(DIK_1)) {
-			if (Viewport::GetPiplineState() == D3D12_FILL_MODE_WIREFRAME) {
-				Viewport::SetPiplineState(D3D12_FILL_MODE_SOLID);
+			if (viewport.GetPiplineState() == D3D12_FILL_MODE_WIREFRAME) {
+				viewport.SetPiplineState(D3D12_FILL_MODE_SOLID);
 			}
-			else if (Viewport::GetPiplineState() == D3D12_FILL_MODE_SOLID) {
-				Viewport::SetPiplineState(D3D12_FILL_MODE_WIREFRAME);
+			else if (viewport.GetPiplineState() == D3D12_FILL_MODE_SOLID) {
+				viewport.SetPiplineState(D3D12_FILL_MODE_WIREFRAME);
 			}
 		}
 		//塗りつぶし・ワイヤーフレーム更新
-		Viewport::PipelineStateUpdata(&result, device);
+		viewport.PipelineStateUpdata(device);
 		//背景色更新
 		commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 
@@ -646,8 +660,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 		//インデックスバッファビューの設定コマンド
 		commandList->IASetIndexBuffer(&ibView);
-
-
 		// シザー矩形
 		D3D12_RECT scissorRect{};
 		//指定座標の中のみ描画するための処理
@@ -659,9 +671,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		commandList->RSSetScissorRects(1, &scissorRect);
 		//-------------------------左上
 		// ビューポート設定コマンド
-		Viewport::SetViewport((float)window_width, (float)window_height, 0, 0, 0, 1.0f);
+		viewport.SetViewport((float)window_width, (float)window_height, 0, 0, 0, 1.0f);
 		// パイプラインステートとルートシグネチャの設定コマンド
-		Viewport::SetPipeline(commandList);
+		viewport.SetPipeline(commandList);
 		// プリミティブ形状の設定コマンド
 		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		// D3D_PRIMITIVE_TOPOLOGY_POINTLIST		点のリスト

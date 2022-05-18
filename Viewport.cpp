@@ -1,13 +1,3 @@
-//#include "Viewport.h"
-//#include <vector>
-//#include <DirectXMath.h>
-//#include <cassert>
-//#include <d3dcommon.h>
-//#include <d3d12.h>
-//#pragma comment(lib, "d3dcompiler.lib")
-//#pragma comment(lib, "d3d12.lib")
-//#pragma comment(lib, "dxgi.lib")
-//#include <combaseapi.h>
 
 #include <Windows.h>
 #include <d3d12.h>
@@ -46,34 +36,16 @@ D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
 	}
 };
 
-// グラフィックスパイプライン設定
-D3D12_GRAPHICS_PIPELINE_STATE_DESC pipelineDesc{};
-// ルートシグネチャ
-ID3D12RootSignature* rootSignature;
-// ルートシグネチャの設定
-D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc{};
-
-// ルートシグネチャのシリアライズ
-ID3DBlob* rootSigBlob = nullptr;
-// パイプランステートの生成
-ID3D12PipelineState* pipelineState = nullptr;
-
-// ビューポート設定コマンド
-D3D12_VIEWPORT viewport{};
-
-//ルートのパラメータ設定
-D3D12_ROOT_PARAMETER rootParams[2] = {};
-
-//デスクリプタレンジの設定
-D3D12_DESCRIPTOR_RANGE descriptorRange{};
-//テクスチャサンプラーの設定
-D3D12_STATIC_SAMPLER_DESC samplerDesc{};
-
 
 #pragma endregion
 
-void Viewport::ViewPortIni(ID3DBlob* vsBlob, ID3DBlob* psBlob, ID3DBlob* errorBlob, HRESULT* result, ID3D12Device* device)
+Viewport::Viewport()
 {
+}
+
+void Viewport::ViewPortIni(ID3DBlob* vsBlob, ID3DBlob* psBlob, ID3DBlob* errorBlob, ID3D12Device* device)
+{
+	HRESULT result;
 	// シェーダーの設定
 	pipelineDesc.VS.pShaderBytecode = vsBlob->GetBufferPointer();
 	pipelineDesc.VS.BytecodeLength = vsBlob->GetBufferSize();
@@ -174,20 +146,20 @@ void Viewport::ViewPortIni(ID3DBlob* vsBlob, ID3DBlob* psBlob, ID3DBlob* errorBl
 	rootSignatureDesc.NumStaticSamplers = 1;
 
 	//// ルートシグネチャのシリアライズ
-	*result = D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1_0,
+	result = D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1_0,
 		&rootSigBlob, &errorBlob);
-	//assert(SUCCEEDED(*result));
-	*result = device->CreateRootSignature(0, rootSigBlob->GetBufferPointer(), rootSigBlob->GetBufferSize(),
+	assert(SUCCEEDED(result));
+	result = device->CreateRootSignature(0, rootSigBlob->GetBufferPointer(), rootSigBlob->GetBufferSize(),
 		IID_PPV_ARGS(&rootSignature));
-	//assert(SUCCEEDED(result));
+	assert(SUCCEEDED(result));
 	rootSigBlob->Release();
 	// パイプラインにルートシグネチャをセット
 	pipelineDesc.pRootSignature = rootSignature;
 
 	//// パイプランステートの生成
 	//ID3D12PipelineState* pipelineState = nullptr;
-	*result = device->CreateGraphicsPipelineState(&pipelineDesc, IID_PPV_ARGS(&pipelineState));
-	//assert(SUCCEEDED(result));
+	result = device->CreateGraphicsPipelineState(&pipelineDesc, IID_PPV_ARGS(&pipelineState));
+	assert(SUCCEEDED(result));
 
 	
 }
@@ -197,10 +169,11 @@ void Viewport::SetPiplineState(D3D12_FILL_MODE mode)
 	pipelineDesc.RasterizerState.FillMode = mode;
 }
 //ぬりつぶしorワイヤーフレーム更新
-void Viewport::PipelineStateUpdata(HRESULT* result, ID3D12Device* device)
+void Viewport::PipelineStateUpdata( ID3D12Device* device)
 {
-	*result = device->CreateGraphicsPipelineState(&pipelineDesc, IID_PPV_ARGS(&pipelineState));
-	assert(SUCCEEDED(*result));
+	HRESULT result;
+	result = device->CreateGraphicsPipelineState(&pipelineDesc, IID_PPV_ARGS(&pipelineState));
+	assert(SUCCEEDED(result));
 }
 // ビューポート設定コマンド
 void Viewport::SetViewport(float Width, float height, float topLeftX, float topLeftY, float minDepth, float maxDepth)
