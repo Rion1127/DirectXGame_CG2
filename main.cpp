@@ -5,9 +5,11 @@
 #include <vector>
 #include <string>
 #include <DirectXMath.h>
+///////自作クラス////////
 #include "DirectXInput.h"
 #include "Viewport.h"
-#include "WindowsAPI.h"
+#include "WinAPI.h"
+///////////////////////
 using namespace DirectX;
 #include <d3dcompiler.h>
 #pragma comment(lib, "d3dcompiler.lib")
@@ -16,20 +18,6 @@ using namespace DirectX;
 #pragma comment(lib, "dxgi.lib")
 
 #include <DirectXTex.h>
-
-//ウィンドウプロシージャ
-LRESULT WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
-{
-	//メッセージに応じてゲーム特有の処理を行う
-	switch (msg) {
-		//ウィンドウが破棄された
-	case WM_DESTROY:
-		//OSに対して、アプリの終了を伝える
-		return 0;
-	}
-	//標準のメッセージ処理を行う
-	return DefWindowProc(hwnd, msg, wparam, lparam);
-}
 
 struct ConstBufferDataMaterial {
 	XMFLOAT4 colro;
@@ -40,14 +28,6 @@ struct Vertex {
 	XMFLOAT2 uv;
 };
 
-
-/////////////////////////
-
-//WindowsAPIクラス制作途中
-
-/////////////////////////
-
-
 //Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
@@ -55,45 +35,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	//-+-+-+-+-+-+-+-+-+-+-+-+-//
 	//WindowsAPI初期化処理 ここから//
 	//-+-+-+-+-+-+-+-+-+-+-+-+-//
-	//const int window_width = 1280;	//横幅
-	//const int window_height = 720;	//縦幅
-
-	////ウィンドウクラスの設定
-	//WNDCLASSEX w{};
-	//w.cbSize = sizeof(WNDCLASSEX);
-	//w.lpfnWndProc = (WNDPROC)WindowProc;		//ウィンドウプロシージャを設定
-	//w.lpszClassName = L"DirectXGame";			//ウィンドウクラス名
-	//w.hInstance = GetModuleHandle(nullptr);		//ウィンドウハンドル
-	//w.hCursor = LoadCursor(NULL, IDC_ARROW);	//カーソル指定
-
-	////ウィンドウクラスをOSに登録する
-	//RegisterClassEx(&w);
-	////ウィンドウサイズ{　X座標　Y座標　横幅　縦幅}
-	//RECT wrc = { 0,0,window_width,window_height };
-	////自動でサイズを修正する
-	//AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, false);
-
-	////ウィンドウオブジェクトの生成
-	//HWND hwnd = CreateWindow(w.lpszClassName,
-	//	L"DirectXGame",
-	//	WS_OVERLAPPEDWINDOW,
-	//	CW_USEDEFAULT,
-	//	CW_USEDEFAULT,
-	//	wrc.right - wrc.left,
-	//	wrc.bottom - wrc.top,
-	//	nullptr,
-	//	nullptr,
-	//	w.hInstance,
-	//	nullptr);
-
-	////ウィンドウを表示状態にする
-	//ShowWindow(hwnd, SW_SHOW);
-
-	//MSG msg{};		//メッセージ
-	WindowsAPI winAPI;
-
+	WinAPI winAPI;
 	winAPI.UpdataWindowsAPI();
-	
 	//-+-+-+-+-+-+-+-+-+-+-+-+-//
 	//WindowsAPI初期化処理 ここまで//
 	//-+-+-+-+-+-+-+-+-+-+-+-+-//
@@ -201,7 +144,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 	// スワップチェーンの生成
 	result = dxgiFactory->CreateSwapChainForHwnd(
-		commandQueue, hwnd, &swapChainDesc, nullptr, nullptr,
+		commandQueue, winAPI.hwnd, &swapChainDesc, nullptr, nullptr,
 		(IDXGISwapChain1**)&swapChain);
 	assert(SUCCEEDED(result));
 
@@ -239,7 +182,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	result = device->CreateFence(fenceVal, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
 
 	//キーボードインプット初期化
-	DirectXInput::InputIni(w, hwnd);
+	DirectXInput::InputIni(winAPI.w, winAPI.hwnd);
 
 	//-+-+-+-+-+-+-+-+-+-+-+-//
 	//DirectX初期化処理　ここまで//
@@ -591,12 +534,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		//ウィンドウメッセージ処理//
 		///////////////////////
 		// メッセージがある？
-		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
-			TranslateMessage(&msg); // キー入力メッセージの処理
-			DispatchMessage(&msg); // プロシージャにメッセージを送る
+		if (PeekMessage(&winAPI.msg, nullptr, 0, 0, PM_REMOVE)) {
+			TranslateMessage(&winAPI.msg); // キー入力メッセージの処理
+			DispatchMessage(&winAPI.msg); // プロシージャにメッセージを送る
 		}
 		// ?ボタンで終了メッセージが来たらゲームループを抜ける
-		if (msg.message == WM_QUIT) {
+		if (winAPI.msg.message == WM_QUIT) {
 			break;
 		}
 #pragma endregion
@@ -664,14 +607,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		D3D12_RECT scissorRect{};
 		//指定座標の中のみ描画するための処理
 		scissorRect.left = 0; // 切り抜き座標左
-		scissorRect.right = scissorRect.left + window_width; // 切り抜き座標右
+		scissorRect.right = scissorRect.left + winAPI.GetWinWidth(); // 切り抜き座標右
 		scissorRect.top = 0; // 切り抜き座標上
-		scissorRect.bottom = scissorRect.top + window_height; // 切り抜き座標下
+		scissorRect.bottom = scissorRect.top + winAPI.GetWinHeight(); // 切り抜き座標下
 		// シザー矩形設定コマンドを、コマンドリストに積む
 		commandList->RSSetScissorRects(1, &scissorRect);
 		//-------------------------左上
 		// ビューポート設定コマンド
-		viewport.SetViewport((float)window_width, (float)window_height, 0, 0, 0, 1.0f);
+		viewport.SetViewport((float)winAPI.GetWinWidth(), (float)winAPI.GetWinHeight(), 0, 0, 0, 1.0f);
 		// パイプラインステートとルートシグネチャの設定コマンド
 		viewport.SetPipeline(commandList);
 		// プリミティブ形状の設定コマンド

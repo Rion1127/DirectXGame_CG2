@@ -144,7 +144,7 @@
     <ClCompile Include="DirectXInput.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Viewport.cpp" />
-    <ClCompile Include="WindowsAPI.cpp" />
+    <ClCompile Include="WinAPI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="BasicPS.hlsl">
@@ -163,7 +163,7 @@
   <ItemGroup>
     <ClInclude Include="DirectXInput.h" />
     <ClInclude Include="Viewport.h" />
-    <ClInclude Include="WindowsAPI.h" />
+    <ClInclude Include="WinAPI.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Basic.hlsli" />
@@ -172,8 +172,8 @@
     <ProjectReference Include="..\DirectXTex\DirectXTex_Desktop_2022_Win10.vcxproj">
       <Project>{371b9fa9-4c90-4ac6-a123-aced756d6c77}</Project>
     </ProjectReference>
-    <ProjectReference Include="DirectXTex\DirectXTex_Desktop_2022_Win10.vcxproj">
-      <Project>{371b9fa9-4c90-4ac6-a123-aced756d6c77}</Project>
+    <ProjectReference Include="DirectXTex\DirectXTex_Desktop_2022.vcxproj">
+      <Project>{6af19f22-ba2b-4a48-9732-f091b4027dc7}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
