@@ -35,8 +35,6 @@ D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
 		D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0
 	}
 };
-
-
 #pragma endregion
 
 Viewport::Viewport()
@@ -176,6 +174,7 @@ void Viewport::PipelineStateUpdata( ID3D12Device* device)
 	assert(SUCCEEDED(result));
 }
 // ビューポート設定コマンド
+//描画する範囲を設定
 void Viewport::SetViewport(float Width, float height, float topLeftX, float topLeftY, float minDepth, float maxDepth)
 {
 	viewport.Width = Width;
@@ -194,20 +193,6 @@ void Viewport::SetPipeline(ID3D12GraphicsCommandList* commandList)
 	commandList->SetPipelineState(pipelineState);
 	commandList->SetGraphicsRootSignature(rootSignature);
 }
-
-//void Viewport::Draw(ID3D12GraphicsCommandList* commandList,D3D12_VERTEX_BUFFER_VIEW vbView, const XMFLOAT3& vertices)
-//{
-//	std::vector<XMFLOAT3> a = { vertices };
-//	std::size_t size_t = a.size();
-//	
-//
-//	// 頂点バッファビューの設定コマンド
-//	commandList->IASetVertexBuffers(0, 1, &vbView);
-//
-//	// 描画コマンド
-//	commandList->DrawInstanced(size_t, 1, 0, 0); // 全ての頂点を使って描画
-//
-//}
 
 int Viewport::GetPiplineState()
 {
