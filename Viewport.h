@@ -37,7 +37,7 @@ private:
 	// ビューポート設定コマンド
 	D3D12_VIEWPORT viewport{};
 	//ルートのパラメータ設定
-	D3D12_ROOT_PARAMETER rootParams[2] = {};
+	D3D12_ROOT_PARAMETER rootParams[3] = {};
 	//デスクリプタレンジの設定
 	D3D12_DESCRIPTOR_RANGE descriptorRange{};
 	//テクスチャサンプラーの設定

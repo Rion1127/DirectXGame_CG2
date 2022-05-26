@@ -35,6 +35,8 @@ D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
 		D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0
 	}
 };
+
+
 #pragma endregion
 
 Viewport::Viewport()
@@ -121,6 +123,11 @@ void Viewport::ViewPortIni(ID3DBlob* vsBlob, ID3DBlob* psBlob, ID3DBlob* errorBl
 	rootParams[1].DescriptorTable.pDescriptorRanges = &descriptorRange;					//でスクリプタレンジ
 	rootParams[1].DescriptorTable.NumDescriptorRanges = 1;						//デスクリプタレンジ数
 	rootParams[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;	//全てのシェーダから見える
+	//定数バッファ1番
+	rootParams[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;	//種類
+	rootParams[2].Descriptor.ShaderRegister = 1;					//定数バッファ番号
+	rootParams[2].Descriptor.RegisterSpace = 0;						//デフォルト値
+	rootParams[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;	//全てのシェーダから見える
 
 	//テクスチャサンプラーの設定
 	samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;					//横繰り返し（タイリング）
@@ -174,7 +181,6 @@ void Viewport::PipelineStateUpdata( ID3D12Device* device)
 	assert(SUCCEEDED(result));
 }
 // ビューポート設定コマンド
-//描画する範囲を設定
 void Viewport::SetViewport(float Width, float height, float topLeftX, float topLeftY, float minDepth, float maxDepth)
 {
 	viewport.Width = Width;
@@ -193,6 +199,20 @@ void Viewport::SetPipeline(ID3D12GraphicsCommandList* commandList)
 	commandList->SetPipelineState(pipelineState);
 	commandList->SetGraphicsRootSignature(rootSignature);
 }
+
+//void Viewport::Draw(ID3D12GraphicsCommandList* commandList,D3D12_VERTEX_BUFFER_VIEW vbView, const XMFLOAT3& vertices)
+//{
+//	std::vector<XMFLOAT3> a = { vertices };
+//	std::size_t size_t = a.size();
+//	
+//
+//	// 頂点バッファビューの設定コマンド
+//	commandList->IASetVertexBuffers(0, 1, &vbView);
+//
+//	// 描画コマンド
+//	commandList->DrawInstanced(size_t, 1, 0, 0); // 全ての頂点を使って描画
+//
+//}
 
 int Viewport::GetPiplineState()
 {

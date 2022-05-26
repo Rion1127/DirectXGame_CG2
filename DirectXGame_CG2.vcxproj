@@ -142,8 +142,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="DirectXInput.cpp" />
-    <ClCompile Include="DirextX.cpp" />
-    <ClCompile Include="GraphicsCmnd.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Viewport.cpp" />
     <ClCompile Include="WinAPI.cpp" />
@@ -164,8 +162,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DirectXInput.h" />
-    <ClInclude Include="DirextX.h" />
-    <ClInclude Include="GraphicsCmnd.h" />
     <ClInclude Include="Viewport.h" />
     <ClInclude Include="WinAPI.h" />
   </ItemGroup>
