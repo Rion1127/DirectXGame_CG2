@@ -191,8 +191,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	//定数バッファの生成
 	ID3D12Resource* constBuffTransform = nullptr;
 	ConstBufferDataTransform* constMapTransform = nullptr;
-	XMMATRIX old;
-	XMMATRIX a;
+	/*XMMATRIX old;
+	XMMATRIX a;*/
+	//ビュー変換行列
+	XMMATRIX matView;
+	XMFLOAT3 eye(0, 0, -100);	//視点座標
+	XMFLOAT3 target(0, 0, 0);	//注視点座標
+	XMFLOAT3 up(0, 1, 0);		//上方向ベクトル
+	matView = XMMatrixLookAtLH(XMLoadFloat3(&eye), XMLoadFloat3(&target), XMLoadFloat3(&up));
 	{
 		//ヒープ設定
 		D3D12_HEAP_PROPERTIES cbHeapProp{};
@@ -225,39 +231,30 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			0.0f, winAPI.GetWinWidth(),
 			winAPI.GetWinHeight(), 0.0f,
 			0.0f, 1.0f);
-
-		//透視投影行列の計算
-		XMMATRIX matProjection = XMMatrixPerspectiveFovLH(
-			XMConvertToRadians(45.0f),
-			(float)winAPI.GetWinWidth() / winAPI.GetWinHeight(),
-			0.1f, 1000.0f
-		);
-
-		//次回、ここでビュー変換行列（投資投影）を計算
-
-		//定数バッファに転送
-		constMapTransform->mat = matProjection;
-
-		old = XMMatrixIdentity();
-		//平行投影行列の計算
-
-		a = XMMatrixOrthographicOffCenterLH(
-			0.0f, winAPI.GetWinWidth(),
-			winAPI.GetWinHeight(), 0.0f,
-			0.0f, 1.0f);
-
+		//old = XMMatrixIdentity();
+		////平行投影行列の計算
+		//a = XMMatrixOrthographicOffCenterLH(
+		//	0.0f, winAPI.GetWinWidth(),
+		//	winAPI.GetWinHeight(), 0.0f,
+		//	0.0f, 1.0f);
 		/*constMapTransform->mat.r[0].m128_f32[0] = 2.0f / winAPI.GetWinWidth();
 		constMapTransform->mat.r[1].m128_f32[1] = -2.0f / winAPI.GetWinHeight();
 		constMapTransform->mat.r[3].m128_f32[0] = -1.0f;
 		constMapTransform->mat.r[3].m128_f32[1] = 1.0f;*/
-
-		old.r[0].m128_f32[0] = 2.0f / winAPI.GetWinWidth();
+		/*old.r[0].m128_f32[0] = 2.0f / winAPI.GetWinWidth();
 		old.r[1].m128_f32[1] = -2.0f / winAPI.GetWinHeight();
 		old.r[3].m128_f32[0] = -1.0f;
-		old.r[3].m128_f32[1] = 1.0f;
-
-
+		old.r[3].m128_f32[1] = 1.0f;*/
 	}
+
+	//透視投影行列の計算
+	XMMATRIX matProjection = XMMatrixPerspectiveFovLH(
+		XMConvertToRadians(45.0f),
+		(float)winAPI.GetWinWidth() / winAPI.GetWinHeight(),
+		0.1f, 1000.0f
+	);
+	//定数バッファに転送
+	constMapTransform->mat = matView * matProjection;
 
 	//キーボードインプット初期化
 	DirectXInput::InputIni(winAPI.w, winAPI.hwnd);
@@ -288,10 +285,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	//};
 
 	Vertex vertices[] = {
-	{{-50.0f,-50.0f,150.0f} ,{0.0f,1.0f}},//左下
-	{{-50.0f, 50.0f,150.0f} ,{0.0f,0.0f}},//左上
-	{{ 50.0f,-50.0f,150.0f} ,{1.0f,1.0f}},//左下
-	{{ 50.0f, 50.0f,150.0f} ,{1.0f,0.0f}},//左上
+	{{-50.0f,-50.0f,0.0f} ,{0.0f,1.0f}},//左下
+	{{-50.0f, 50.0f,0.0f} ,{0.0f,0.0f}},//左上
+	{{ 50.0f,-50.0f,0.0f} ,{1.0f,1.0f}},//右下
+	{{ 50.0f, 50.0f,0.0f} ,{1.0f,0.0f}},//右上
 	};
 
 	//インデックスデータ
@@ -617,6 +614,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 
 	XMFLOAT4 testColor(0, 0, 0, 0.5f);
+	float angle = 0;
 
 	//ゲームループ
 	while (true) {
@@ -678,6 +676,23 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		viewport.PipelineStateUpdata(device);
 		//背景色更新
 		commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+
+		if (DirectXInput::IsKeyDown(DIK_D)) {
+			angle += XMConvertToRadians(1.0f);
+
+		}
+
+		if (DirectXInput::IsKeyDown(DIK_A)) {
+			angle -= XMConvertToRadians(1.0f);
+		}
+
+		//angleラジアンだけY軸周りに回転。半径は-100
+		eye.x = -100 * sinf(angle);
+		eye.z = -100 * cosf(angle);
+		matView = XMMatrixLookAtLH(XMLoadFloat3(&eye), XMLoadFloat3(&target), XMLoadFloat3(&up));
+		//定数バッファに転送
+		constMapTransform->mat = matView * matProjection;
+
 
 		//三角形の色変更
 		//testColor.x += 0.01f;
