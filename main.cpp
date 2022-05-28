@@ -186,11 +186,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	UINT64 fenceVal = 0;
 	result = device->CreateFence(fenceVal, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
 
-	
+
 
 	//定数バッファの生成
 	ID3D12Resource* constBuffTransform = nullptr;
-	ConstBufferDataTransform* constMapTranform = nullptr;
+	ConstBufferDataTransform* constMapTransform = nullptr;
+	XMMATRIX old;
+	XMMATRIX a;
 	{
 		//ヒープ設定
 		D3D12_HEAP_PROPERTIES cbHeapProp{};
@@ -215,15 +217,46 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		assert(SUCCEEDED(result));
 
 		//定数バッファのマッピング
-		result = constBuffTransform->Map(0, nullptr, (void**)&constMapTranform);	//マッピング
+		result = constBuffTransform->Map(0, nullptr, (void**)&constMapTransform);	//マッピング
 		assert(SUCCEEDED(result));
-		//単位行列を代入
-		constMapTranform->mat = XMMatrixIdentity();
 
-		constMapTranform->mat.r[0].m128_f32[0] = 2.0f / winAPI.GetWinWidth();
-		constMapTranform->mat.r[1].m128_f32[1] = -2.0f / winAPI.GetWinHeight();
-		constMapTranform->mat.r[3].m128_f32[0] = -1.0f;
-		constMapTranform->mat.r[3].m128_f32[1] = 1.0f;
+		//単位行列を代入
+		constMapTransform->mat = XMMatrixOrthographicOffCenterLH(
+			0.0f, winAPI.GetWinWidth(),
+			winAPI.GetWinHeight(), 0.0f,
+			0.0f, 1.0f);
+
+		//透視投影行列の計算
+		XMMATRIX matProjection = XMMatrixPerspectiveFovLH(
+			XMConvertToRadians(45.0f),
+			(float)winAPI.GetWinWidth() / winAPI.GetWinHeight(),
+			0.1f, 1000.0f
+		);
+
+		//次回、ここでビュー変換行列（投資投影）を計算
+
+		//定数バッファに転送
+		constMapTransform->mat = matProjection;
+
+		old = XMMatrixIdentity();
+		//平行投影行列の計算
+
+		a = XMMatrixOrthographicOffCenterLH(
+			0.0f, winAPI.GetWinWidth(),
+			winAPI.GetWinHeight(), 0.0f,
+			0.0f, 1.0f);
+
+		/*constMapTransform->mat.r[0].m128_f32[0] = 2.0f / winAPI.GetWinWidth();
+		constMapTransform->mat.r[1].m128_f32[1] = -2.0f / winAPI.GetWinHeight();
+		constMapTransform->mat.r[3].m128_f32[0] = -1.0f;
+		constMapTransform->mat.r[3].m128_f32[1] = 1.0f;*/
+
+		old.r[0].m128_f32[0] = 2.0f / winAPI.GetWinWidth();
+		old.r[1].m128_f32[1] = -2.0f / winAPI.GetWinHeight();
+		old.r[3].m128_f32[0] = -1.0f;
+		old.r[3].m128_f32[1] = 1.0f;
+
+
 	}
 
 	//キーボードインプット初期化
@@ -246,14 +279,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	//	{{ -0.4f,+0.7f,0.0f} ,{0.0f,0.0f}},//左上
 	//	{{ +0.4f,-0.7f,0.0f} ,{1.0f,1.0f}},//左下
 	//	{{ +0.4f,+0.7f,0.0f} ,{1.0f,0.0f}},//左上
-
 	//};
-	Vertex vertices[] = {
-	{{  0.0f,100.0f,0.0f} ,{0.0f,1.0f}},//左下
-	{{  0.0f,  0.0f,0.0f} ,{0.0f,0.0f}},//左上
-	{{100.0f,100.0f,0.0f} ,{1.0f,1.0f}},//左下
-	{{100.0f,  0.0f,0.0f} ,{1.0f,0.0f}},//左上
+	//Vertex vertices[] = {
+	//{{  0.0f,200.0f,0.0f} ,{0.0f,1.0f}},//左下
+	//{{  0.0f,  0.0f,0.0f} ,{0.0f,0.0f}},//左上
+	//{{200.0f,200.0f,0.0f} ,{1.0f,1.0f}},//左下
+	//{{200.0f,  0.0f,0.0f} ,{1.0f,0.0f}},//左上
+	//};
 
+	Vertex vertices[] = {
+	{{-50.0f,-50.0f,150.0f} ,{0.0f,1.0f}},//左下
+	{{-50.0f, 50.0f,150.0f} ,{0.0f,0.0f}},//左上
+	{{ 50.0f,-50.0f,150.0f} ,{1.0f,1.0f}},//左下
+	{{ 50.0f, 50.0f,150.0f} ,{1.0f,0.0f}},//左上
 	};
 
 	//インデックスデータ
