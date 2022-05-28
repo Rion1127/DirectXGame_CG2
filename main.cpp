@@ -195,10 +195,32 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	XMMATRIX a;*/
 	//ビュー変換行列
 	XMMATRIX matView;
-	XMFLOAT3 eye(0, 0, -100);	//視点座標
+	XMFLOAT3 eye(0, 0, -150);	//視点座標
 	XMFLOAT3 target(0, 0, 0);	//注視点座標
 	XMFLOAT3 up(0, 1, 0);		//上方向ベクトル
 	matView = XMMatrixLookAtLH(XMLoadFloat3(&eye), XMLoadFloat3(&target), XMLoadFloat3(&up));
+
+	//ワールド変換行列
+	XMMATRIX matWorld(
+		1, 0, 0, 0,
+		0, 1, 0, 0,
+		0, 0, 1, 0,
+		0, 0, 0, 1);
+	//スケーリング行列
+	XMMATRIX matScale;
+	matScale = XMMatrixScaling(1.0f, 1.0f, 1.0f);
+	matWorld *= matScale;	//ワールド座標にスケーリングを反映
+	//回転行列
+	XMMATRIX matRot;
+	matRot = XMMatrixIdentity();
+	matRot *= XMMatrixRotationZ(XMConvertToRadians(0.0f));	//z軸まわりに0度回転
+	matRot *= XMMatrixRotationX(XMConvertToRadians(15.0f));	//x軸まわりに15度回転
+	matRot *= XMMatrixRotationY(XMConvertToRadians(30.0f));	//y軸まわりに30度回転
+	matWorld *= matRot;	//ワールド行列に回転を反映
+	//平行移動
+	XMMATRIX matTrans;
+	matTrans = XMMatrixTranslation(-50.0f, 0, 0);
+	matWorld *= matTrans;	//ワールド行列に平行移動を反映
 	{
 		//ヒープ設定
 		D3D12_HEAP_PROPERTIES cbHeapProp{};
@@ -254,7 +276,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		0.1f, 1000.0f
 	);
 	//定数バッファに転送
-	constMapTransform->mat = matView * matProjection;
+	constMapTransform->mat = matWorld * matView * matProjection;
 
 	//キーボードインプット初期化
 	DirectXInput::InputIni(winAPI.w, winAPI.hwnd);
@@ -615,6 +637,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 	XMFLOAT4 testColor(0, 0, 0, 0.5f);
 	float angle = 0;
+	//スケーリング倍率
+	XMFLOAT3 scale;
+	//回転角
+	XMFLOAT3 rotation;
+	//座標
+	XMFLOAT3 position;
+	
+	scale = { 1.0f,1.0f,1.0f };
+	rotation = { 0.0f,0.0f,0.5f };
+	position = { 0.0f,0.0f,0.0f };
 
 	//ゲームループ
 	while (true) {
@@ -677,21 +709,45 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		//背景色更新
 		commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 
-		if (DirectXInput::IsKeyDown(DIK_D)) {
-			angle += XMConvertToRadians(1.0f);
+		//カメラ移動
 
-		}
+		//if (DirectXInput::IsKeyDown(DIK_D)) {
+		//	angle += XMConvertToRadians(1.0f);
+		//}
+		//if (DirectXInput::IsKeyDown(DIK_A)) {
+		//	angle -= XMConvertToRadians(1.0f);
+		//}
+		////angleラジアンだけY軸周りに回転。半径は-100
+		//eye.x = -200 * sinf(angle);
+		//eye.z = -200 * cosf(angle);
+		//matView = XMMatrixLookAtLH(XMLoadFloat3(&eye), XMLoadFloat3(&target), XMLoadFloat3(&up));
+		////定数バッファに転送
+		//constMapTransform->mat = matView * matProjection;
 
-		if (DirectXInput::IsKeyDown(DIK_A)) {
-			angle -= XMConvertToRadians(1.0f);
-		}
+		//ワールド座標
 
-		//angleラジアンだけY軸周りに回転。半径は-100
-		eye.x = -100 * sinf(angle);
-		eye.z = -100 * cosf(angle);
-		matView = XMMatrixLookAtLH(XMLoadFloat3(&eye), XMLoadFloat3(&target), XMLoadFloat3(&up));
+			//座標移動
+		if (DirectXInput::IsKeyDown(DIK_UP)) { position.z += 1.0f; }
+		else if (DirectXInput::IsKeyDown(DIK_DOWN)) { position.z -= 1.0f; }
+		if (DirectXInput::IsKeyDown(DIK_RIGHT)) { position.x += 1.0f; }
+		else if (DirectXInput::IsKeyDown(DIK_LEFT)) { position.x -= 1.0f; }
+
+		matScale = XMMatrixScaling(scale.x, scale.y, scale.z);
+
+		matRot = XMMatrixIdentity();
+		matRot *= XMMatrixRotationZ(rotation.z);
+		matRot *= XMMatrixRotationX(rotation.x);
+		matRot *= XMMatrixRotationY(rotation.y);
+
+		matTrans = XMMatrixTranslation(position.x, position.y, position.z);
+
+		matWorld = XMMatrixIdentity();	//変数をリセット
+		matWorld *= matScale;
+		matWorld *= matRot;
+		matWorld *= matTrans;	//ワールド行列に平行移動を反映
+
 		//定数バッファに転送
-		constMapTransform->mat = matView * matProjection;
+		constMapTransform->mat = matWorld * matView * matProjection;
 
 
 		//三角形の色変更

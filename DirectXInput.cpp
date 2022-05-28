@@ -55,17 +55,17 @@ void DirectXInput::InputUpdata()	//アップデート
 	keyboard->GetDeviceState(sizeof(keys), keys);
 }
 //押しっぱなし
-bool DirectXInput::IsKeyDown(char key)
+bool DirectXInput::IsKeyDown(UINT8 key)
 {
 	return keys[key];
 }
 //押した瞬間
-bool DirectXInput::IsKeyTrigger(char key)
+bool DirectXInput::IsKeyTrigger(UINT8 key)
 {
 	return keys[key] && !oldkeys[key];
 }
 //離した瞬間
-bool DirectXInput::GetKeyReleased(char key)
+bool DirectXInput::GetKeyReleased(UINT8 key)
 {
 	return !keys[key] && oldkeys[key];
 }
