@@ -393,6 +393,31 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	resDesc.SampleDesc.Count = 1;
 	resDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
+	//法線の計算
+	for (int i = 0; i < _countof(indices) / 3; i++) {
+		//三角形1つごとに計算していく
+		//三角形のインデックスを取り出して、一時的な変数に入れる
+		unsigned short index0 = indices[i * 3 + 0];
+		unsigned short index1 = indices[i * 3 + 1];
+		unsigned short index2 = indices[i * 3 + 2];
+		//三角形を構成する頂点座標をベクトルに代入
+		XMVECTOR p0 = XMLoadFloat3(&vertices[index0].pos);
+		XMVECTOR p1 = XMLoadFloat3(&vertices[index1].pos);
+		XMVECTOR p2 = XMLoadFloat3(&vertices[index2].pos);
+		//p0→p1ベクトル、p0→p2ベクトルを計算（ベクトルの減算）
+		XMVECTOR v1 = XMVectorSubtract(p1, p0);
+		XMVECTOR v2 = XMVectorSubtract(p2, p0);
+		//外積は両方から垂直なベクトル
+		XMVECTOR normal = XMVector3Cross(v1, v2);
+		//正規化（長さを1にする）
+		normal = XMVector3Normalize(normal);
+		//求めた法線を頂点データに代入
+		XMStoreFloat3(&vertices[index0].normal, normal);
+		XMStoreFloat3(&vertices[index1].normal, normal);
+		XMStoreFloat3(&vertices[index2].normal, normal);
+
+	}
+
 	// 頂点バッファの生成
 	ID3D12Resource* vertBuff = nullptr;
 	result = device->CreateCommittedResource(
@@ -597,7 +622,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	//	}
 	//}
 
-
 	//ヒープ設定
 	D3D12_HEAP_PROPERTIES textureHeapProp{};
 	textureHeapProp.Type = D3D12_HEAP_TYPE_CUSTOM;
@@ -736,9 +760,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 #pragma endregion
 
-
 	XMFLOAT4 testColor(0, 0, 0, 0.5f);
-	float angle = 0;
+	float angleX = 0;
+	float angleY = 0;
 	//スケーリング倍率
 	XMFLOAT3 scale;
 	//回転角
@@ -817,16 +841,30 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);;
 
 		//カメラ移動
+		if (DirectXInput::IsKeyDown(DIK_D) || DirectXInput::IsKeyDown(DIK_A)) {
+			if (DirectXInput::IsKeyDown(DIK_D)) {
+				angleX += XMConvertToRadians(1.0f);
+			}
+			if (DirectXInput::IsKeyDown(DIK_A)) {
+				angleX -= XMConvertToRadians(1.0f);
+			}
+			//angleラジアンだけY軸周りに回転。半径は-100
+			eye.x = -20 * sinf(angleX);
+			eye.z = -20 * cosf(angleX);
+		}
 
-		if (DirectXInput::IsKeyDown(DIK_D)) {
-			angle += XMConvertToRadians(1.0f);
+		if (DirectXInput::IsKeyDown(DIK_W) || DirectXInput::IsKeyDown(DIK_S)) {
+			if (DirectXInput::IsKeyDown(DIK_W)) {
+				angleY += XMConvertToRadians(1.0f);
+			}
+			if (DirectXInput::IsKeyDown(DIK_S)) {
+				angleY -= XMConvertToRadians(1.0f);
+			}
+			//angleラジアンだけY軸周りに回転。半径は-100
+			eye.y = -20 * sinf(angleY);
+			eye.z = -20 * cosf(angleY);
 		}
-		if (DirectXInput::IsKeyDown(DIK_A)) {
-			angle -= XMConvertToRadians(1.0f);
-		}
-		//angleラジアンだけY軸周りに回転。半径は-100
-		eye.x = -20 * sinf(angle);
-		eye.z = -20 * cosf(angle);
+
 		matView = XMMatrixLookAtLH(XMLoadFloat3(&eye), XMLoadFloat3(&target), XMLoadFloat3(&up));
 		//定数バッファに転送
 		constMapTransform->mat = matView * matProjection;
