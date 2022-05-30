@@ -27,7 +27,13 @@ D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
 	D3D12_APPEND_ALIGNED_ELEMENT,				//データのオフセット値(D3D12_APPEND_ALIGNED_ELEMENTだと自動設定)
 	D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,	//入力データ種別(標準はD3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA)
 	0											//一度に描画するインスタンス数(0でよい)
-	}, // (1行で書いたほうが見やすい)
+	},
+	{//法線ベクトル
+	"NORMAL",0,DXGI_FORMAT_R32G32B32_FLOAT,0,
+	D3D12_APPEND_ALIGNED_ELEMENT,
+	D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0
+	} ,
+	// (1行で書いたほうが見やすい)
 	//座標以外に　色、テクスチャUV等を渡す場合はさらに続ける
 	{
 		"TEXCOORD",0,DXGI_FORMAT_R32G32_FLOAT,0,
@@ -56,7 +62,8 @@ void Viewport::ViewPortIni(ID3DBlob* vsBlob, ID3DBlob* psBlob, ID3DBlob* errorBl
 	pipelineDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK; // 標準設定
 
 	// ラスタライザの設定
-	pipelineDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE; // カリングしない
+	//pipelineDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE; // カリングしない
+	pipelineDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK; // 背景をカリング
 	pipelineDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID; // ポリゴン内塗りつぶし	SOLID = 塗りつぶし  WIREFRAME = ワイヤーフレーム
 	pipelineDesc.RasterizerState.DepthClipEnable = true; // 深度クリッピングを有効に
 
@@ -172,7 +179,7 @@ void Viewport::ViewPortIni(ID3DBlob* vsBlob, ID3DBlob* psBlob, ID3DBlob* errorBl
 	result = device->CreateGraphicsPipelineState(&pipelineDesc, IID_PPV_ARGS(&pipelineState));
 	assert(SUCCEEDED(result));
 
-	
+
 }
 //ぬりつぶしorワイヤーフレームセット
 void Viewport::SetPiplineState(D3D12_FILL_MODE mode)
@@ -180,7 +187,7 @@ void Viewport::SetPiplineState(D3D12_FILL_MODE mode)
 	pipelineDesc.RasterizerState.FillMode = mode;
 }
 //ぬりつぶしorワイヤーフレーム更新
-void Viewport::PipelineStateUpdata( ID3D12Device* device)
+void Viewport::PipelineStateUpdata(ID3D12Device* device)
 {
 	HRESULT result;
 	result = device->CreateGraphicsPipelineState(&pipelineDesc, IID_PPV_ARGS(&pipelineState));
